@@ -1,0 +1,36 @@
+{
+  "name": "sonne",
+  "version": "1.0.0",
+  "description": "Practical monads and monad transformers for JS.",
+  "main": "lib/core.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boris-marinov/sonne.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/boris-marinov/sonne/issues"
+  },
+  "homepage": "https://github.com/boris-marinov/sonne#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "babelify": "^6.3.0",
+    "browserify-versionify": "^1.0.4",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^3.3.0",
+    "grunt-contrib-nodeunit": "^0.4.1",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-exorcise": "^1.0.0",
+    "grunt-standard": "^1.0.2",
+    "phantomjs": "^1.9.12",
+    "qunitjs": "^1.15.0",
+    "uglifyify": "^3.0.1"
+  }
+}
