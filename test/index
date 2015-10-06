@@ -1,13 +1,4 @@
 
-var maybe_id = make_monad(maybe, id)
-
-maybe_id(4)
-    .map(function(val){return val+1})
-    .map(function(a){console.assert(a === 5, a);return a})
-    .map(function(num){return undefined})
-    .map(function(a){console.assert(false);return a})
-
-
 
 list_maybe = make_monad(list, maybe)
 list_maybe([4,2])
@@ -16,17 +7,6 @@ list_maybe([4,2])
 		console.log(val)
 	})
 
-
-run = false
-maybe_id(4)
-    .flatMap(function(val){
-        return maybe_id(5)
-    })
-    .map(function(val){
-        console.assert(val===5)
-        run = true
-    })
-console.assert(run === true)
 
 
 
