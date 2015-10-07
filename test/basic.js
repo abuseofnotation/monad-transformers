@@ -1,4 +1,4 @@
-var sonne = require('../lib/core')
+var sonne = require('../lib/main')
 module.exports = {
   
   maybeId:function(test){

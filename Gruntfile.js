@@ -24,81 +24,93 @@ Works with the following project structure.
  
 */
 
-
 var sources = 'lib/*.js'
 
-module.exports = function(grunt) {
-    grunt.initConfig({
-        pkg: grunt.file.readJSON('package.json'), // the package file to use
-        //Runs Q-Unit tests
-        nodeunit: {
-		all:['test/tests_node.js'],
+module.exports = function (grunt) {
+  grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'), // the package file to use
+    // Runs Q-Unit tests
+    nodeunit: {
+      all: ['test/tests_node.js'],
 
+    },
+    // Runs a task whenever some of the source files change
+    watch: {
+      files: ['test/*.js', sources],
+      tasks: ['test']
+    },
+    exorcise: {
+      bundle: {
+        options: {},
+        files: {
+          'target/<%= pkg.name %>.min.map': ['target/<%= pkg.name %>.min.js'],
+        }
+      }
+    },
+    notify_hooks: {
+      options: {
+        enabled: true,
+        max_jshint_notifications: 5, // maximum number of notifications from jshint output
+        title: "Project Name", // defaults to the name in package.json, or will use project directory's name
+        success: false, // whether successful grunt executions should be notified automatically
+        duration: 3 // the duration of notification in seconds, for `notify-send only
+      }
+    },
+    browserify: {
+      beautiful: {
+        options: {
+          browserifyOptions: {
+            debug: true
+          },
+          transform: ['babelify' , ['browserify-versionify', {global: true}]]
         },
-        //Runs a task whenever some of the source files change
-        watch: {
-            files: ['test/*.js', sources],
-            tasks: ['default']
+        files: {
+          'target/<%= pkg.name %>.js': [sources]
+        }
+      },
+      ugly: {
+        options: {
+          browserifyOptions: {
+            debug: true
+          },
+          transform: ['babelify' , ['browserify-versionify', {global: true}], ['uglifyify', {global: true}]]
         },
-        exorcise: {
-            bundle: {
-                options: {},
-                files: {
-                    "target/<%= pkg.name %>.min.map": ["target/<%= pkg.name %>.min.js"],
-                }
-            }
+        files: {
+          'target/<%= pkg.name %>.min.js': [sources]
+        }
+      },
+      tests: {
+        options: {
+          browserifyOptions: {
+            debug: true
+          },
+          transform: ['babelify' , ['browserify-versionify', {global: true}]]
         },
+        files: {
+          'test/tests_browser.js': ['test/tests_node.js']
+        }
+      },
+    },
+    standard: {
+      options: {
+        // Task-specific options go here. 
+      },
+      your_target: [sources]
+    }
+  })
 
-        browserify: {
-			beautiful:{
-				options: {
-					browserifyOptions: {
-						debug: true
-					},
-					transform:['babelify' ,['browserify-versionify', {global:true}]]
-				},
-				files: {
-				"target/<%= pkg.name %>.js": [sources]
-				}
-			},
-			ugly:{
-				options: {
-					browserifyOptions: {
-						debug: true
-					},
-					transform:['babelify' ,['browserify-versionify', {global:true}], ['uglifyify', {global:true}]]
-				},
-				files: {
-				"target/<%= pkg.name %>.min.js": [sources]
-				}
-			},
-			tests:{
-				options: {
-					browserifyOptions: {
-						debug: true
-					},
-					transform:['babelify' ,['browserify-versionify', {global:true}]]
-				},
-				files: {
-				"test/tests_browser.js": ['test/tests_node.js']
-				}
-			},
-        },
-		standard: {
-			options: {
-			  // Task-specific options go here. 
-			},
-			your_target: [sources]
-	  }
-    });
-    // load up your plugins
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-nodeunit');
-    grunt.loadNpmTasks('grunt-browserify');
-    grunt.loadNpmTasks('grunt-exorcise');
-	grunt.loadNpmTasks('grunt-standard');
 
-    grunt.registerTask('browser', ['browserify', "exorcise"]);
-    grunt.registerTask('test', ['standard', 'nodeunit']);
-    grunt.registerTask('default', ["browser", 'test']);
-};
+  // load up your plugins
+  grunt.loadNpmTasks('grunt-contrib-watch')
+  grunt.loadNpmTasks('grunt-contrib-nodeunit')
+  grunt.loadNpmTasks('grunt-browserify')
+  grunt.loadNpmTasks('grunt-exorcise')
+  grunt.loadNpmTasks('grunt-standard')
+  grunt.loadNpmTasks('grunt-notify')
+
+  grunt.registerTask('browser', ['browserify', 'exorcise'])
+  grunt.registerTask('test', ['standard', 'nodeunit'])
+  grunt.registerTask('default', ['browser', 'test'])
+  
+  grunt.task.run('notify_hooks')
+}

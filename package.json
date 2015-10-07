@@ -2,7 +2,7 @@
   "name": "sonne",
   "version": "1.0.0",
   "description": "Practical monads and monad transformers for JS.",
-  "main": "lib/core.js",
+  "main": "lib/main.js",
   "directories": {
     "test": "tests"
   },
@@ -28,6 +28,7 @@
     "grunt-contrib-nodeunit": "^0.4.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-exorcise": "^1.0.0",
+    "grunt-notify": "^0.4.1",
     "grunt-standard": "^1.0.2",
     "phantomjs": "^1.9.12",
     "qunitjs": "^1.15.0",
