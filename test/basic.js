@@ -1,30 +1,31 @@
 var sonne = require('../lib/main')
+var sinon = require('sinon')
 module.exports = {
-  
-  maybeId:function(test){
-  
-	var maybeId = sonne.make(sonne.data.maybe, sonne.data.id)
+  maybeId:{
+    setUp:function(done){
+      this.maybeId = sonne.make(sonne.data.maybe, sonne.data.id)
+      this.spy = sinon.spy((a) => a)
+      done()
+    },
+    map:function (test) {
+      maybeId = this.maybeId
 
-	maybeId(4)
-	    .map(function(val){return val+1})
-	    .map(function(a){test.equals(a, 5, a);return a})
-	    .map(function(num){return undefined})
-	    .map(function(a){test.equals(true, false);return a})
-
-	var run = false
-	maybeId(4)
-	    .flatMap(function(val){
-		return maybeId(5)
-	    })
-	    .map(function(val){
-		test.equals(val, 5)
-		run = true
-	    })
-	test.equals(run, true)
-
-	test.done()
-
-
+      this.maybeId(4)
+        .map(function (val) {return val + 1})
+        .map(function (a) {test.equals(a, 5, a);return a})
+        .map(function (num) {return undefined})
+        .map(this.spy)
+      test.equals(this.spy.called, false)
+      test.done()
+    },
+    flatMap:function(test){ 
+      this.maybeId(4)
+        .flatMap(function (val) {
+          return maybeId(5)
+        })
+        .map(this.spy)
+      test.equals(this.spy.firstCall.returnValue, 5)
+      test.done()
+    }
   }
-
 }
