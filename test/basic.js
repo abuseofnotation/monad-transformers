@@ -26,6 +26,17 @@ module.exports = {
         .map(this.spy)
       test.equals(this.spy.firstCall.returnValue, 5)
       test.done()
-    }
+    },
+   /* maybeList:{
+      setUp:function(done){
+        this.maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
+        this.spy = sinon.spy((a) => a)
+        done()
+      },
+      flatMap:function(test){
+        this.maybeList([1,2,3])
+      }
+      
+    }*/
   }
 }
