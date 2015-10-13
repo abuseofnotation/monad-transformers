@@ -19,7 +19,10 @@
     "url": "https://github.com/boris-marinov/sonne/issues"
   },
   "homepage": "https://github.com/boris-marinov/sonne#readme",
-  "dependencies": {},
+  "dependencies": {
+    "nodeunit": "^0.9.1",
+    "sinon": "^1.17.1"
+  },
   "devDependencies": {
     "babelify": "^6.3.0",
     "browserify-versionify": "^1.0.4",
