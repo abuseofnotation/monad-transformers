@@ -1,16 +1,17 @@
 var sonne = require('../lib/main')
 var sinon = require('sinon')
 
-var maybeStacks = [sonne.make(sonne.data.id, sonne.data.maybe), sonne.make(sonne.data.maybe, sonne.data.id)]
+var maybeID = sonne.make(sonne.data.maybe, sonne.data.id)
+const IDMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
+var maybeStacks = [IDMaybe, maybeID]
 
-var monads = [sonne.make(sonne.data.id, sonne.data.maybe), sonne.make(sonne.data.maybe, sonne.data.id)]
+var monads = maybeStacks 
 
 module.exports = {
     Maybe (test) {
       maybeStacks.forEach((maybe) =>{
         var spy = sinon.spy((a) => a)
-        var chainSpy = sinon.spy((a) => a)
-        maybe(4)
+        maybe.of(4)
           .map(function (val) {return val + 1})
           .chainMaybe((val)=> {
             test.equals(val, 5, 'A call to "map" modifies the value, and packs it again')
@@ -25,12 +26,13 @@ module.exports = {
       const val = 5
       monads.forEach(monad => {
         var spy = sinon.spy((a) => a)
-        monad(val)
-         .chain((val)=> monad(val))
-         .chain((val)=> monad(val)._value)
-      .map(spy)	    
+        monad.of(val)
+          .chain((val)=> monad.of(val))
+          .map(spy)	    
         test.equals(spy.firstCall.returnValue, val, "Unpacking a monad and packing it again yeilds the same structure")
+        test.throws(()=>(monad.of(4).chain((val)=>monad.of(val)._value )), "The chain method expects a wrapped value")
       }) 
+
       test.done()
     },
     maybeList (test){
