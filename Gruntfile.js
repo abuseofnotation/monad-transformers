@@ -31,7 +31,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'), // the package file to use
     // Runs Q-Unit tests
     nodeunit: {
-      all: ['test/tests_node.js'],
+      all: ['test/tests.js'],
 
     },
     // Runs a task whenever some of the source files change
@@ -87,7 +87,7 @@ module.exports = function (grunt) {
           transform: ['babelify' , ['browserify-versionify', {global: true}]]
         },
         files: {
-          'test/tests_browser.js': ['test/tests_node.js']
+          'test/tests_browser.js': ['test/tests.js']
         }
       },
     },
@@ -95,7 +95,7 @@ module.exports = function (grunt) {
       options: {
         // Task-specific options go here. 
       },
-      your_target: [sources]
+      your_target: [sources, "tests/*.js"]
     }
   })
 
