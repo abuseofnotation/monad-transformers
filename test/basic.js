@@ -15,7 +15,7 @@ module.exports = {
           .map(function (val) {return val + 1})
           .chainMaybe((val)=> {
             test.equals(val, 5, 'A call to "map" modifies the value, and packs it again')
-            return {maybeVal:undefined}
+            return {maybeVal:undefined} 
           })
         .map(spy)
         test.equals(spy.called, false, "After a val is set to undefined, functions are no longer called")
@@ -24,7 +24,7 @@ module.exports = {
         maybe.of({foo:"bar"})
           .get("foo")
           .map(spy)
-        test.equals(spy.called, true)
+        test.equals(spy.lastCall.returnValue, 'bar')
 
       })
       test.done()
