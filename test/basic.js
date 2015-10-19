@@ -20,7 +20,6 @@ module.exports = {
         .map(spy)
         test.equals(spy.called, false, "After a val is set to undefined, functions are no longer called")
 
-        debugger
         maybe.of({foo:"bar"})
           .get("foo")
           .map(spy)
