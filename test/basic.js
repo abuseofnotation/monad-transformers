@@ -5,6 +5,10 @@ var maybeID = sonne.make(sonne.data.maybe, sonne.data.id)
 const IDMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
 var maybeStacks = [IDMaybe, maybeID]
 
+var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
+var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
+var stateStacks = [maybeState, stateMaybe]
+
 var maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
 var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
 var listStacks = [maybeList, listMaybe]
@@ -62,8 +66,23 @@ module.exports = {
       })
       test.done()
     },*/
-    test (test){
-      debugger
+    state(test){
+      maybeState
+      stateMaybe
+
+      maybeState( (prevState) => ({maybeVal:[4, undefined ] }) )
+      stateMaybe( (prevState) => ([{maybeVal:4}, undefined ] ) )
+        .save()
+        ._value()
+
+    /*  stateStacks.forEach(state => {
+        state.of(4)
+          .save()
+          .load()
+          .map(()=>6)
+          .load()
+          debugger
+      })*/
       test.done()
     }
 
