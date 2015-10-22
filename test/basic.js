@@ -7,7 +7,9 @@ var maybeStacks = [IDMaybe, maybeID]
 
 var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
 var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
-var stateStacks = [maybeState, stateMaybe]
+var IDState = sonne.make(sonne.data.id, sonne.comp.state)
+var stateID = sonne.make(sonne.comp.state, sonne.data.id)
+var stateStacks = [maybeState, stateMaybe, IDState, stateID]
 
 var maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
 var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
@@ -46,6 +48,7 @@ module.exports = {
     },
     chain (test){
       const val = 5
+      test.expect(monads.length * 2)
       monads.forEach(monad => {
         var spy = sinon.spy((a) => a)
         monad.of(val)
@@ -67,22 +70,31 @@ module.exports = {
       test.done()
     },*/
     state(test){
-      maybeState
-      stateMaybe
-
-      maybeState( (prevState) => ({maybeVal:[4, undefined ] }) )
-      stateMaybe( (prevState) => ([{maybeVal:4}, undefined ] ) )
-        .save()
-        ._value()
-
-    /*  stateStacks.forEach(state => {
-        state.of(4)
+        var stateStacks = [
+          maybeState( (prevState) => ({maybeVal:[4, undefined ] }) ),
+          stateMaybe( (prevState) => ([{maybeVal:4}, undefined ] ) )
+        ]
+        test.expect(stateStacks.length * 3)
+        stateStacks.forEach(state => {
+        debugger
+        state/*.of(4)*/
           .save()
+          .map((val)=> {
+            console.log("ran")
+            test.equal(val, 4, '"save" does not affect the wrapped value')
+            return 6
+          })
+          .map((val)=> {
+            test.equal(val, 6, '"map" replaces the wrapped value')
+            return val
+          })
           .load()
-          .map(()=>6)
-          .load()
-          debugger
-      })*/
+          .map((val)=>{
+            test.equal(val, 4, '"load" brings back the saved value')
+            return val
+          })
+
+      })
       test.done()
     }
 
