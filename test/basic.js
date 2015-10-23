@@ -72,7 +72,6 @@ module.exports = {
     state(test){
         var stateStacks = [
           maybeState( (prevState) => ({maybeVal:[4, undefined ] }) ),
-          stateMaybe( (prevState) => ([{maybeVal:4}, undefined ] ) )
         ]
         test.expect(stateStacks.length * 3)
         stateStacks.forEach(state => {
@@ -92,7 +91,7 @@ module.exports = {
           .map((val)=>{
             test.equal(val, 4, '"load" brings back the saved value')
             return val
-          })
+          })._value()
 
       })
       test.done()
