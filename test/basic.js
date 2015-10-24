@@ -1,15 +1,15 @@
 var sonne = require('../lib/main')
 var sinon = require('sinon')
 
-var maybeID = sonne.make(sonne.data.maybe, sonne.data.id)
-const IDMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
-var maybeStacks = [IDMaybe, maybeID]
+var maybeId = sonne.make(sonne.data.maybe, sonne.data.id)
+const idMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
+var maybeStacks = [idMaybe, maybeId]
 
 var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
 var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
-var IDState = sonne.make(sonne.data.id, sonne.comp.state)
-var stateID = sonne.make(sonne.comp.state, sonne.data.id)
-var stateStacks = [maybeState, stateMaybe, IDState, stateID]
+var idState = sonne.make(sonne.data.id, sonne.comp.state)
+var stateId = sonne.make(sonne.comp.state, sonne.data.id)
+var stateStacks = [maybeState, stateMaybe, idState, stateId]
 
 var maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
 var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
@@ -95,6 +95,35 @@ module.exports = {
 
       })
       test.done()
+    },
+
+    statedev(test){
+      var state = idState( (prevState) => ({idVal:[4, "foo" ] }) )
+      state
+        .chain((val) => idState( (prevState) => ({idVal:[prevState, prevState ] }) ))
+        
+        .chain((val) =>{ 
+          test.equal(val, "foo"); 
+          return idState( (prevState) => ({idVal:[prevState, prevState ] }) )
+        })
+        /*.save()
+        .map((val)=> {
+          console.log("ran")
+          test.equal(val, 4, '"save" does not affect the wrapped value')
+          return 6
+        })
+        .map((val)=> {
+          test.equal(val, 6, '"map" replaces the wrapped value')
+          return val
+        })
+        .load()
+        .map((val)=>{
+          test.equal(val, 4, '"load" brings back the saved value')
+          return val
+        })*/ 
+        ._value()
+
+    test.done()
     }
 
   }
