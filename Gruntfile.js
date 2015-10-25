@@ -31,7 +31,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'), // the package file to use
     // Runs Q-Unit tests
     nodeunit: {
-      all: ['test/tests.js'],
+      all: ['test/*.js'],
 
     },
     // Runs a task whenever some of the source files change

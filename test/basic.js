@@ -9,7 +9,7 @@ var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
 var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
 var idState = sonne.make(sonne.data.id, sonne.comp.state)
 var stateId = sonne.make(sonne.comp.state, sonne.data.id)
-var stateStacks = [maybeState, stateMaybe, idState, stateId]
+var stateStacks = [idState, maybeState, stateMaybe, stateId]
 
 var maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
 var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
@@ -70,19 +70,15 @@ module.exports = {
       test.done()
     },*/
     state(test){
-        var stateStacks = [
-          maybeState( (prevState) => ({maybeVal:[4, undefined ] }) ),
-        ]
         test.expect(stateStacks.length * 3)
         stateStacks.forEach(state => {
-        debugger
-        state/*.of(4)*/
+        state.of(4)
           .save()
           .map((val)=> {
-            console.log("ran")
             test.equal(val, 4, '"save" does not affect the wrapped value')
             return 6
           })
+        
           .map((val)=> {
             test.equal(val, 6, '"map" replaces the wrapped value')
             return val
@@ -91,22 +87,33 @@ module.exports = {
           .map((val)=>{
             test.equal(val, 4, '"load" brings back the saved value')
             return val
-          })._value()
+          }) 
+
+          ._value()
 
       })
       test.done()
     },
 
     statedev(test){
-      var state = idState( (prevState) => ({idVal:[4, "foo" ] }) )
+      
+      var state = idState.of(4)
+      debugger
+      state.save()
       state
+        .save()
+        .map(val => 4)
         .chain((val) => idState( (prevState) => ({idVal:[prevState, prevState ] }) ))
+        /*
         
         .chain((val) =>{ 
-          test.equal(val, "foo"); 
-          return idState( (prevState) => ({idVal:[prevState, prevState ] }) )
+          test.equal(val, undefined); 
+          return idState( (prevState) => {
+            test.equal(prevState, undefined)
+            return{idVal:[prevState, prevState ] }
+          })
         })
-        /*.save()
+        .save()
         .map((val)=> {
           console.log("ran")
           test.equal(val, 4, '"save" does not affect the wrapped value')
