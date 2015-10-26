@@ -11,8 +11,8 @@ var idState = sonne.make(sonne.data.id, sonne.comp.state)
 var stateId = sonne.make(sonne.comp.state, sonne.data.id)
 var stateStacks = [idState, maybeState, stateMaybe, stateId]
 
-var maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
-var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
+var maybeList = sonne.make(sonne.data.maybe, sonne.comp.list)
+var listMaybe = sonne.make(sonne.comp.list, sonne.data.maybe)
 var listStacks = [maybeList, listMaybe]
 
 var monads = maybeStacks
@@ -59,16 +59,18 @@ module.exports = {
       }) 
       test.done()
     },
-    /*List (test){
-      maybeID
-      listMaybe
-      test.deepEqual(maybeList.of([1,2,3]).map((a)=>(a+1)), maybeList.of([2,3,4]), "foo")
-      debugger
+    List (test){
+      var spy = sinon.spy((a) => a)
+      listMaybe.of([{name:"foo"},{name:"bar"}, {name:"baz"}])
+        .get("name")
+        .map(spy)
+
+      test.deepEqual(spy.returnValues, ['foo', 'bar', 'baz'])
+
       listStacks.forEach((list) =>{
-        list.of([1,2,3])
       })
       test.done()
-    },*/
+    },
     state(test){
         test.expect(stateStacks.length * 3)
         stateStacks.forEach(state => {
