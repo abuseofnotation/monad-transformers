@@ -36,7 +36,7 @@ module.exports = {
           .get("foo")
           .get("baz")
           .map(spy)
-        test.equals(spy.lastCall.returnValue, 'bar')
+        test.equals(spy.lastCall.returnValue, 'bar', "The get helper returns a maybe of a given value")
 
         spy = sinon.spy((a) => a)
         maybe.of({foo:"bar"})
@@ -54,6 +54,7 @@ module.exports = {
         monad.of(val)
           .chain((val)=> monad.of(val))
           .map(spy)	    
+        debugger
         test.equals(spy.firstCall.returnValue, val, "Unpacking a monad and packing it again yeilds the same structure")
         test.throws(()=>(monad.of(4).chain((val)=>monad.of(val)._value )), "The chain method expects a wrapped value")
       }) 
