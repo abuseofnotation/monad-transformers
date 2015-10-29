@@ -1,5 +1,10 @@
+if ( global.v8debug ) {
+  global.v8debug.Debug.setBreakOnException(); // speaks for itself
+}
 var sonne = require('../lib/main')
 var sinon = require('sinon')
+
+var m = sonne.make(sonne.data.id,sonne.data.bd, sonne.data.maybe)
 
 var maybeId = sonne.make(sonne.data.maybe, sonne.data.id)
 const idMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
@@ -18,6 +23,10 @@ var listStacks = [maybeList, listMaybe]
 var monads = maybeStacks
 
 module.exports = {
+    dev(test){
+      debugger
+    test.done()
+    },
     Maybe (test) {
       maybeStacks.forEach((maybe) =>{
 
@@ -95,44 +104,7 @@ module.exports = {
 
       })
       test.done()
-    },
-
-    statedev(test){
-      
-      var state = idState.of(4)
-      debugger
-      state.save()
-      state
-        .save()
-        .map(val => 4)
-        .chain((val) => idState( (prevState) => ({idVal:[prevState, prevState ] }) ))
-        /*
-        
-        .chain((val) =>{ 
-          test.equal(val, undefined); 
-          return idState( (prevState) => {
-            test.equal(prevState, undefined)
-            return{idVal:[prevState, prevState ] }
-          })
-        })
-        .save()
-        .map((val)=> {
-          console.log("ran")
-          test.equal(val, 4, '"save" does not affect the wrapped value')
-          return 6
-        })
-        .map((val)=> {
-          test.equal(val, 6, '"map" replaces the wrapped value')
-          return val
-        })
-        .load()
-        .map((val)=>{
-          test.equal(val, 4, '"load" brings back the saved value')
-          return val
-        })*/ 
-        ._value()
-
-    test.done()
     }
+
 
   }
