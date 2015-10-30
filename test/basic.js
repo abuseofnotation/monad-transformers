@@ -4,8 +4,6 @@ if ( global.v8debug ) {
 var sonne = require('../lib/main')
 var sinon = require('sinon')
 
-var m = sonne.make(sonne.data.id,sonne.data.bd, sonne.data.maybe)
-
 var maybeId = sonne.make(sonne.data.maybe, sonne.data.id)
 const idMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
 var maybeStacks = [idMaybe, maybeId]
