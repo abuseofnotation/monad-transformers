@@ -21,10 +21,6 @@ var listStacks = [maybeList, listMaybe]
 var monads = maybeStacks
 
 module.exports = {
-    dev(test){
-      debugger
-    test.done()
-    },
     Maybe (test) {
       maybeStacks.forEach((maybe) =>{
 

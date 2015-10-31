@@ -15,7 +15,7 @@ module.exports = {
     test.deepEqual(stack.wrapLift(bar, barVal), fooBarVal, "WrapLift works for the inner value of stacks of two items.")
     test.done()
   },
-  stackThree(test){
+  dev(test){
     const stack = createStack([foo, bar, baz])
     const fooVal = foo.of(5)
     const barVal = bar.of(5)
@@ -26,10 +26,12 @@ module.exports = {
     test.deepEqual(stack.lift(foo, fooVal), fooBarBazVal, "Lift works for the outer value of stacks of three items.")
     test.deepEqual(stack.lift(bar, fooBarVal), fooBarBazVal, "Lift works for the outer value of stacks of three items.")
 
-    // test.deepEqual(stack.wrap(baz, bazVal), fooBarBazVal, "Wrap works for the outermost value of stacks of three items.")
+    test.deepEqual(stack.wrap(baz, bazVal), fooBarBazVal, "Wrap works for the outermost value of stacks of three items.")
 
-    // test.deepEqual(stack.wrapLift(bar, barVal), barBazVal, "Lift works for the middle value of stacks of three items.")
-    // test.deepEqual(stack.wrapLift(baz, bazVal), bazVal, "Lift works for the innermost value of stacks of three items.")
+    test.deepEqual(stack.wrap(bar, barBazVal), fooBarBazVal, "Wrap works for the middle value of stacks of three items.")
+
+    //test.deepEqual(stack.wrapLift(bar, barVal), barBazVal, "Lift works for the middle value of stacks of three items.")
+    //test.deepEqual(stack.wrapLift(baz, bazVal), bazVal, "Lift works for the innermost value of stacks of three items.")
 
     test.done()
   }
