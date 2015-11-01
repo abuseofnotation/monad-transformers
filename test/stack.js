@@ -1,4 +1,5 @@
 var createStack = require('../lib/stack')
+var comp = require('../lib/comp')
 module.exports = {
   stack(test){
     const stack = createStack([foo, bar])
@@ -8,14 +9,14 @@ module.exports = {
     test.deepEqual(stack.wrap(foo, fooVal), fooVal, "Wrap does nothing for values of the outer type")
     test.deepEqual(stack.lift(bar, barVal), barVal, "Lift does nothing for values of the inner type")
 
-    test.deepEqual(stack.lift(foo, fooVal), fooBarVal, "WrapLift works for the outer value of stacks of two items.")
-    test.deepEqual(stack.wrap(bar, barVal), fooBarVal, "WrapLift works for the inner value of stacks of two items.")
+    test.deepEqual(stack.lift(foo, fooVal), fooBarVal, "Lift works for the outer value of stacks of two items.")
+    test.deepEqual(stack.wrap(bar, barVal), fooBarVal, "Lift works for the inner value of stacks of two items.")
 
     test.deepEqual(stack.wrapLift(foo, fooVal), fooBarVal, "WrapLift works for the outer value of stacks of two items.")
     test.deepEqual(stack.wrapLift(bar, barVal), fooBarVal, "WrapLift works for the inner value of stacks of two items.")
     test.done()
   },
-  dev(test){
+  stackThree(test){
     const stack = createStack([foo, bar, baz])
     const fooVal = foo.of(5)
     const barVal = bar.of(5)
@@ -30,8 +31,21 @@ module.exports = {
 
     test.deepEqual(stack.wrap(bar, barBazVal), fooBarBazVal, "Wrap works for the middle value of stacks of three items.")
 
-    //test.deepEqual(stack.wrapLift(bar, barVal), barBazVal, "Lift works for the middle value of stacks of three items.")
-    //test.deepEqual(stack.wrapLift(baz, bazVal), bazVal, "Lift works for the innermost value of stacks of three items.")
+    test.deepEqual(stack.wrapLift(bar, barVal), fooBarBazVal, "Liftwrap works for the middle value of stacks of three items.")
+    test.deepEqual(stack.wrapLift(baz, bazVal), fooBarBazVal, "Liftwrap works for the innermost value of stacks of three items.")
+
+    test.deepEqual(stack.wrapLift(foo, fooVal), fooBarBazVal, "Liftwrap works for the outermost value of stacks of three items.")
+    test.done()
+  },
+  dev (test) {
+    const stackTwo = createStack([comp.list , baz])
+    test.equal(stackTwo.lift(comp.list, [1,2,3]), [{bazVal:1},{bazVal:2},{bazVal:3}])
+
+    const stackThree = createStack([baz, comp.list ])
+    test.equal(stackTwo.wrap(comp.list, [1,2,3]), {bazVal:[1,2,3]})
+
+    const stackOne = createStack([foo, comp.list , baz])
+    test.equal(stackOne.wrapLift(comp.list, [1,2,3]), {fooVal:[{bazVal:1},{bazVal:2},{bazVal:3}]})
 
     test.done()
   }
