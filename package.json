@@ -33,6 +33,7 @@
     "grunt-exorcise": "^1.0.0",
     "grunt-notify": "^0.4.1",
     "grunt-standard": "^1.0.2",
+    "js-combinatorics": "^0.5.0",
     "uglifyify": "^3.0.1"
   }
 }
