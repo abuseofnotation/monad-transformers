@@ -8,9 +8,12 @@ var fooWrapped = {
     return {foocont:proto.of({fooVal: val })}
   },
   chain (funk, val, proto) {
+    if(val.foocont === undefined){throw "Invalid input"}
     return {
       foocont:proto.chain((innerfoo) => {
-        return funk(innerfoo.fooVal).foocont
+        const val = funk(innerfoo.fooVal)
+        if(val.foocont === undefined){ throw "Invalid input"}
+        return val.foocont
       }, val.foocont)
     }
   },
@@ -25,16 +28,19 @@ var barWrapped = {
     return {barcont:proto.of({barVal: val })}
   },
   chain (funk, val, proto) {
+    if(val.barcont === undefined){throw "Invalid input"}
     return {
       barcont:proto.chain((innerbar) => {
-        return funk(innerbar.barVal).barcont
+        const val = funk(innerbar.barVal)
+        if(val.barcont === undefined){ throw "Invalid input"}
+        return val.barcont
       }, val.barcont)
     }
   },
   lift (val, proto) {
-    debugger
     return {barcont:proto.chain((innerValue) => proto.of({barVal: innerValue}), val)}
   }
+
 }
 
 
@@ -44,9 +50,12 @@ var bazWrapped = {
     return {bazcont:proto.of({bazVal: val })}
   },
   chain (funk, val, proto) {
+    if(val.bazcont === undefined){throw "Invalid input"}
     return {
       bazcont:proto.chain((innerbaz) => {
-        return funk(innerbaz.bazVal).bazcont
+        const val = funk(innerbaz.bazVal)
+        if(val.bazcont === undefined){ throw "Invalid input"}
+        return val.bazcont
       }, val.bazcont)
     }
   },
@@ -103,29 +112,31 @@ var baz = {
   }
 }
 
-const testTwo = (fooWrapped, barWrapped) => {
+const testTwo = (one, two) => {
   return (test) =>{
-    const stack = createStack([fooWrapped, barWrapped])
-    const fooWrappedVal = stack.of(fooWrapped, 5)
-    const barWrappedVal = stack.of(barWrapped, 5)
-    const fooWrappedbarWrappedVal = stack.of(barWrapped, 5)
-    test.deepEqual(stack.lift(barWrapped, barWrappedVal), barWrappedVal, "Lift does nothing for values of the inner type")
+    const stack = createStack([one, two])
+    const oneVal = stack.of(one, 5)
+    const twoVal = stack.of(two, 5)
+    const onetwoVal = stack.of(two, 5)
+    test.deepEqual(stack.lift(two, twoVal), twoVal, "Lift does nothing for values of the inner type")
 
-    test.deepEqual(stack.lift(fooWrapped, fooWrappedVal), fooWrappedbarWrappedVal, "Lift works for the outer value of stacks of two items.")
+    test.deepEqual(stack.lift(one, oneVal), onetwoVal, "Lift works for the outer value of stacks of two items.")
     test.done()
   }
 }
-const testThree = (fooWrapped, barWrapped, bazWrapped) =>
+const testThree = (one, two, three) =>
   (test) => {
-    const stack = createStack([fooWrapped, barWrapped, bazWrapped])
-    const fooWrappedVal = stack.of(fooWrapped, 5)
-    const barWrappedVal = stack.of(barWrapped, 5)
-    const bazWrappedVal = stack.of(bazWrapped, 5)
-    const fooWrappedbarWrappedVal = stack.of(barWrapped, 5)
-    const fooWrappedbarWrappedbazWrappedVal = stack.of(bazWrapped, 5)
-//    test.deepEqual(stack.lift(fooWrapped, fooWrappedVal), fooWrappedbarWrappedbazWrappedVal, "Lift works for the outer value of stacks of three items.")
-    test.deepEqual(stack.lift(barWrapped, fooWrappedbarWrappedVal), fooWrappedbarWrappedbazWrappedVal, "Lift works for the middle value of stacks of three items.")
+    const stack = createStack([one, two, three])
+    const oneVal = stack.of(one, 5)
+    const twoVal = stack.of(two, 5)
+    const threeVal = stack.of(three, 5)
+    const onetwoVal = stack.of(two, 5)
+    const onetwothreeVal = stack.of(three, 5)
+    test.deepEqual(stack.lift(one, oneVal), onetwothreeVal, "Lift works for the outer value of stacks of three items.")
+    test.deepEqual(stack.lift(two, onetwoVal), onetwothreeVal, "Lift works for the middle value of stacks of three items.")
 
+    // lift . return = return
+    // test.deepEqual( stack.lift(one,stack.of(one,5)), stack.of(one,5), "First law")
     test.done()
   }
 

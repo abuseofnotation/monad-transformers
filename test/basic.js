@@ -12,7 +12,7 @@ var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
 var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
 var idState = sonne.make(sonne.data.id, sonne.comp.state)
 var stateId = sonne.make(sonne.comp.state, sonne.data.id)
-// var stateStacks = [idState, maybeState, stateMaybe, stateId]
+var stateStacks = [idState, maybeState, stateMaybe, stateId]
 var stateStacks = []
 
 var maybeList = sonne.make(sonne.data.maybe, sonne.comp.list)
@@ -23,8 +23,8 @@ var monads = maybeStacks
 
 module.exports = {
     Maybe (test) {
+      test.expect(maybeStacks.length *4)
       maybeStacks.forEach((maybe) =>{
-
         var spy = sinon.spy((a) => a)
         maybe.of(4)
           .map(function (val) {return val + 1})
@@ -50,21 +50,9 @@ module.exports = {
       })
       test.done()
     },
-    chain (test){
-      const val = 5
-      test.expect(monads.length * 1)
-      monads.forEach(monad => {
-        var spy = sinon.spy((a) => a)
-        monad.of(val)
-          .chain((val)=> monad.of(val))
-          .map(spy)	    
-        test.equals(spy.firstCall.returnValue, val, "Unpacking a monad and packing it again yeilds the same structure")
-      }) 
-      test.done()
-    },
     List (test){
       var spy = sinon.spy((a) => a)
-      listMaybe.of([{name:"foo"},{name:"bar"}, {name:"baz"}])
+      listMaybe.lift(sonne.comp.list, [{name:"foo"},{name:"bar"}, {name:"baz"}])
         .get("name")
         .map(spy)
 
