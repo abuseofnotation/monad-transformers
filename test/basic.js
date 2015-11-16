@@ -4,16 +4,12 @@ if ( global.v8debug ) {
 var sonne = require('../lib/main')
 var sinon = require('sinon')
 
-var maybeId = sonne.make(sonne.data.maybe, sonne.id.id)
-const idMaybe = sonne.make(sonne.data.id, sonne.data.maybe)
-var maybeStacks = [idMaybe, maybeId]
 
 var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
 var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
-var idState = sonne.make(sonne.data.id, sonne.comp.state)
-var stateId = sonne.make(sonne.comp.state, sonne.data.id)
-var stateStacks = [idState, maybeState, stateMaybe, stateId]
+var stateStacks = [maybeState, stateMaybe]
 
+var maybeStacks = [maybeState, stateMaybe]
 var maybeList = sonne.make(sonne.data.maybe, sonne.comp.list)
 var listMaybe = sonne.make(sonne.comp.list, sonne.data.maybe)
 var listStacks = [maybeList, listMaybe]
