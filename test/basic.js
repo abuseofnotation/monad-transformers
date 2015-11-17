@@ -9,7 +9,7 @@ var maybeState = sonne.make(sonne.data.maybe, sonne.comp.state)
 var stateMaybe = sonne.make(sonne.comp.state, sonne.data.maybe)
 var stateStacks = [maybeState, stateMaybe]
 
-var maybeStacks = [/*maybeState*/, stateMaybe]
+var maybeStacks = [maybeState, /*stateMaybe*/]
 var maybeList = sonne.make(sonne.data.maybe, sonne.comp.list)
 var listMaybe = sonne.make(sonne.comp.list, sonne.data.maybe)
 var listStacks = [maybeList, listMaybe]
@@ -18,8 +18,20 @@ var monads = maybeStacks
 
 module.exports = {
     Maybe (test) {
-      test.expect(maybeStacks.length *4)
+
+       // maybeState.of(undefined).map(a=>a).run()
+       // TODO make this work
+        //stateMaybe.of(undefined).map(a=>a).run()
+      
+      //test.expect(maybeStacks.length *4)
       maybeStacks.forEach((maybe) =>{
+        var spy = sinon.spy((a) => a)
+        var m = maybe.of({foo:{baz:"bar"}})
+          .get("foo")
+          .get("baz")
+          .map(spy)
+          .run()
+        test.equals(spy.lastCall.returnValue, 'bar')
         var spy = sinon.spy((a) => a)
         maybe.of(4)
           .map(function (val) {return val + 1})
@@ -28,23 +40,15 @@ module.exports = {
             return {maybeVal:undefined} 
           })
           .map(spy)
-          //.run()
-        test.equals(spy.called, false, "After a val is set to undefined, functions are no longer called")
-
-        spy = sinon.spy((a) => a)
-        var m = maybe.of({foo:{baz:"bar"}})
-          .get("foo")
-          .get("baz")
-          .map(spy)
           .run()
-        test.equals(spy.lastCall.returnValue, 'bar')
-
+        test.equals(spy.called, false, "After a val is set to undefined, functions are no longer called")
         spy = sinon.spy((a) => a)
         maybe.of({foo:"bar"})
           .get("bar")
           .map(spy)
           .run()
         test.equals(spy.called, false, 'When you get an undefined value, maybe is not called ')
+       
       })
       test.done()
     },
