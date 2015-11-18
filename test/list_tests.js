@@ -4,6 +4,12 @@ var permutations = require('./permutations')
 
 exports.list = permutations(a => (a.indexOf(sonne.data.list) !== -1), (one, two, three) => {
   return {
+    run: () => {
+      var list = sonne.make(one, two, three)
+      //TODO, fix this
+      // list.lift(sonne.comp.list, [1,2,3]).run()
+      test.done()
+    }
   }
 })
 
