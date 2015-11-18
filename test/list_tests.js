@@ -17,3 +17,13 @@ exports.listMaybeGet = (test) => {
   test.deepEqual(spy.returnValues, ['foo', 'bar', 'baz'])
   test.done()
 }
+exports.listMaybeFilter = (test) => {
+  var listMaybe = sonne.make(sonne.comp.list, sonne.data.maybe)
+  var spy = sinon.spy((a) => a)
+  listMaybe.lift(sonne.comp.list, [{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
+    .filter(a => a.name === 'foo')
+    .map(spy)
+
+  test.deepEqual(spy.returnValues, [{name:'foo'}])
+  test.done()
+}
