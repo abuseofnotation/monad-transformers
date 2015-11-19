@@ -1,3 +1,6 @@
+if ( global.v8debug ) {
+	global.v8debug.Debug.setBreakOnException()
+}
 var createStack = require('../lib/stack')
 var comp = require('../lib/comp')
 var permutations = require('./permutations')
@@ -7,6 +10,7 @@ exports.stack = permutations(a => (a.indexOf(comp.state) === -1), (one, two, thr
     const oneVal = stack.of(one, 5)
     const onetwoVal = stack.of(two, 5)
     const onetwothreeVal = stack.of(three, 5)
+    debugger
     test.deepEqual(stack.lift(one, oneVal), onetwothreeVal, 'Lift works for the outer value of stacks of three items.')
     test.deepEqual(stack.lift(two, onetwoVal), onetwothreeVal, 'Lift works for the middle value of stacks of three items.')
 
