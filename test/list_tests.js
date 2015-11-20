@@ -5,14 +5,25 @@ var sonne = require('../lib/main')
 var sinon = require('sinon')
 var permutations = require('./permutations')
 
-exports.list = permutations(a => (a.indexOf(sonne.comp.list) !== -1), (one, two, three) => {
+const oneList = [1]
+const theList = [1,2,3]
+exports.list = permutations(a => (a.indexOf(sonne.comp.list) !== -1 ), (one, two, three) => {
   return {
     run: (test) => {
       var list = sonne.make(one, two, three)
-      const oneList = [1]
       test.deepEqual(list.fromArray(oneList).run(), oneList, 'A list of one element is regained with the run method')
-      const theList = [1,2,3]
-      test.deepEqual(list.fromArray(theList).run(), theList, 'A list of several elements is regained with the run method')
+      test.done()
+    },
+    filter: (test) => {
+      var list = sonne.make(one, two, three)
+      const method = (a) => a === 1
+      test.deepEqual(list.fromArray(theList).filter(method).run(), theList.filter(method) , 'The filter method works as the build in')
+      test.done()
+    },
+    map: (test) => {
+      var list = sonne.make(one, two, three)
+      const method = (a) => a + 1
+      test.deepEqual(list.fromArray(theList).map(method).run(), theList.map(method) , 'The map method works as the build in')
       test.done()
     }
   }
