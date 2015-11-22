@@ -78,6 +78,19 @@ module.exports = function (grunt) {
         files: {
           'target/<%= pkg.name %>.min.js': [sources]
         }
+      }, 
+      typescript: {
+        base: {
+          src: ['lib-ts/**/*.ts'],
+          dest: 'lib-js',
+          options: {
+            module: 'commonjs', //or commonjs 
+            target: 'es5', //or es3 
+            basePath: 'lib-js',
+            sourceMap: true,
+            declaration: true
+          }
+        }
       },
       tests: {
         options: {
@@ -107,6 +120,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-exorcise')
   grunt.loadNpmTasks('grunt-standard')
   grunt.loadNpmTasks('grunt-notify')
+  grunt.loadNpmTasks('grunt-typescript')
 
   grunt.registerTask('browser', ['browserify', 'exorcise'])
   grunt.registerTask('test', ['standard', 'nodeunit'])

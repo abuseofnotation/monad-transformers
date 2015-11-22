@@ -33,7 +33,9 @@
     "grunt-exorcise": "^1.0.0",
     "grunt-notify": "^0.4.1",
     "grunt-standard": "^1.0.2",
+    "grunt-typescript": "^0.8.0",
     "js-combinatorics": "^0.5.0",
+    "typescript": "^1.6.2",
     "uglifyify": "^3.0.1"
   }
 }
