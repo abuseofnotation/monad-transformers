@@ -5,9 +5,32 @@ var sonne = require('../lib/main')
 var sinon = require('sinon')
 var permutations = require('./permutations')
 
-exports.list = permutations(a => (a.indexOf(sonne.comp.stream) !== -1 ), (one, two, three) => {
-  const fstream = sonne.make(one, two, three)
+const publishOneTwo = (publish) => {
+  publish(1)
+  publish(2)
 }
+
+exports.stream = permutations(a => (a.indexOf(sonne.comp.stream) !== -1 ), (one, two, three) => {
+  return {
+    run:(test) => {
+      const spy = sinon.spy((a) => a)
+      const fstream = sonne.make(one, two, three)
+      fstream.fromPublisher(publishOneTwo)
+        .run(spy)
+      test.deepEqual(spy.returnValues, [1,2])
+      test.done()
+    },
+    map:(test) => {
+      const spy = sinon.spy((a) => a)
+      const fstream = sonne.make(one, two, three)
+      fstream.fromPublisher(publishOneTwo)
+        .map(a => a+1)
+        .run(spy)
+      test.deepEqual(spy.returnValues, [2,3])
+      test.done()
+    }
+  }
+})
 
 /*
 exports.basic = (test) => {
