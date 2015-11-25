@@ -7,7 +7,7 @@ var permutations = require('./permutations')
 
 const publishOneTwo = (publish) => {
   publish(1)
-  publish(2)
+  setTimeout(() => publish(2), 10)
 }
 
 exports.stream = permutations(a => (a.indexOf(sonne.comp.stream) !== -1 ), (one, two, three) => {
@@ -17,8 +17,10 @@ exports.stream = permutations(a => (a.indexOf(sonne.comp.stream) !== -1 ), (one,
       const fstream = sonne.make(one, two, three)
       fstream.fromPublisher(publishOneTwo)
         .run(spy)
-      test.deepEqual(spy.returnValues, [1,2])
-      test.done()
+      setTimeout(() => {
+        test.deepEqual(spy.returnValues, [1,2])
+        test.done()
+      }, 20)
     },
     map:(test) => {
       const spy = sinon.spy((a) => a)
@@ -26,8 +28,10 @@ exports.stream = permutations(a => (a.indexOf(sonne.comp.stream) !== -1 ), (one,
       fstream.fromPublisher(publishOneTwo)
         .map(a => a+1)
         .run(spy)
-      test.deepEqual(spy.returnValues, [2,3])
-      test.done()
+      setTimeout(() => {
+        test.deepEqual(spy.returnValues, [2,3])
+        test.done()
+      }, 20)
     }
   }
 })
