@@ -22,14 +22,13 @@ exports.state = permutations(a => (a.indexOf(sonne.comp.state) !== -1), (one, tw
           test.equal(val, 4, '"load" brings back the saved value')
           return val
         })
-        .run()
+        .value()
       test.done()
     },
-    run: (test) => {
+    value: (test) => {
       var val = 3
       var state = sonne.make(one, two, three)
-      test.equal(state.of(val).run(), val, "run brings back the original value")
-      debugger
+      test.equal(state.of(val).value(), val, "value brings back the original value")
       test.done()
     },
     mapState: (test) => {
@@ -39,7 +38,7 @@ exports.state = permutations(a => (a.indexOf(sonne.comp.state) !== -1), (one, tw
           return [val, val+1]
         })
         .load()
-        .run()
+        .value()
       test.equal(val, 5, '"mapState" lets you consume the value and state and return a new value and a new state.')
       test.done()
     }

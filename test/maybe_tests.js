@@ -11,7 +11,7 @@ exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two
         .get('foo')
         .get('baz')
         .map(spy)
-        .run()
+        .value()
       test.equals(spy.lastCall.returnValue, 'bar')
       test.done()
     },
@@ -26,7 +26,7 @@ exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two
           return {maybeVal: undefined}
         })
         .map(spy)
-        .run()
+        .value()
       test.equals(spy.called, false, 'After a val is set to undefined, functions are no longer called')
       test.done()
     },
@@ -37,7 +37,7 @@ exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two
       maybe.of({foo: 'bar'})
         .get('bar')
         .map(spy)
-        .run()
+        .value()
       test.equals(spy.called, false, 'When you get an undefined value, maybe is not called ')
       test.done()
     }

@@ -6,32 +6,51 @@ var sinon = require('sinon')
 var permutations = require('./permutations')
 
 const publishOneTwo = (publish) => {
-  publish(1)
-  setTimeout(() => publish(2), 10)
+  setTimeout(() => {console.log('published 1');publish(1)}, 1)
+  setTimeout(() => {console.log('published 2');publish(2)}, 20)
 }
+const publishOneTwoSync = (publish) => {
+  console.log('published 1');publish(1)
+  console.log('published 2');publish(2)
+}
+const inArray = (arr, val) => arr.indexOf(val) !== -1
 
-exports.stream = permutations(a => (a.indexOf(sonne.comp.stream) !== -1 ), (one, two, three) => {
+exports.stream = permutations(a => { 
+    return a.indexOf(sonne.comp.stream) === 0
+      //inArray(a, sonne.comp.stream)
+     // && !inArray(a, sonne.comp.list)
+     // && !inArray(a, sonne.data.maybe)
+  }, (one, two, three) => {
   return {
-    run:(test) => {
+    value:(test) => {
+      const spy = sinon.spy((a) => a)
+      const fstream = sonne.make(one, two, three)
+      fstream.fromPublisher(publishOneTwoSync)
+        .value(spy)
+        test.deepEqual(spy.returnValues, [1,2])
+        test.done()
+    },
+    chain:(test) => {
       const spy = sinon.spy((a) => a)
       const fstream = sonne.make(one, two, three)
       fstream.fromPublisher(publishOneTwo)
-        .run(spy)
+        .chain(() => fstream.fromPublisher(publishOneTwo))
+        .value(spy)
       setTimeout(() => {
-        test.deepEqual(spy.returnValues, [1,2])
+        test.deepEqual(spy.returnValues, [1,1,2,2])
         test.done()
-      }, 20)
+      }, 100)
     },
     map:(test) => {
       const spy = sinon.spy((a) => a)
       const fstream = sonne.make(one, two, three)
       fstream.fromPublisher(publishOneTwo)
         .map(a => a+1)
-        .run(spy)
+        .value(spy)
       setTimeout(() => {
         test.deepEqual(spy.returnValues, [2,3])
         test.done()
-      }, 20)
+      }, 100)
     }
   }
 })
@@ -45,7 +64,7 @@ exports.basic = (test) => {
   var addItem
   fstream.fromStream(add =>{addItem = add})
     .map(a =>{console.log('added item '+a)})
-    .run()
+    .value()
   addItem(2)
   
   fstream.fromStream(add =>{addItem = add})
@@ -55,7 +74,7 @@ exports.basic = (test) => {
       })
     )
     .map(a =>{console.log('added item '+a)})
-    .run()
+    .value()
   addItem(2)
 }
 */
