@@ -13,9 +13,8 @@ exports.writer = permutations(a => (a.indexOf(sonne.data.writer) !== -1), (one, 
       writer.of(5)
         .tell('foo')
         .tell('bar')
-        .listen((val) => test.equal(val, 'foobar'))
+        .listen((val) =>{test.equal(val, 'foobar')})
         .value()
-
       test.done()
     }
   }
