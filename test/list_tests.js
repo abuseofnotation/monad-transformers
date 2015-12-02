@@ -49,3 +49,4 @@ exports.listMaybeFilter = (test) => {
   test.deepEqual(spy.returnValues, [{name:'foo'}])
   test.done()
 }
+global.list = module.exports

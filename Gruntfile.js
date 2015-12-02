@@ -87,7 +87,7 @@ module.exports = function (grunt) {
           transform: ['babelify' , ['browserify-versionify', {global: true}]]
         },
         files: {
-          'test/tests_browser.js': ['test/tests.js']
+          'test/tests_browser.js': ['test/*.js']
         }
       },
     },

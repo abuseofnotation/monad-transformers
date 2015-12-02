@@ -43,3 +43,4 @@ exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two
     }
   }
 })
+global.maybe = module.exports

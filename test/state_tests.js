@@ -45,3 +45,4 @@ exports.state = permutations(a => (a.indexOf(sonne.comp.state) !== -1), (one, tw
 
   }
 })
+global.state = module.exports

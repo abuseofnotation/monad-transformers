@@ -17,3 +17,4 @@ exports.stack = permutations(a => (a.indexOf(comp.state) === -1), (one, two, thr
     // test.deepEqual( stack.lift(one,stack.of(one,5)), stack.of(one,5), "First law")
     test.done()
 })
+global.stack = module.exports
