@@ -4,7 +4,8 @@
 Import the module and start playing:
           var mtl = require('monad-transformers')
 ### From browser
-     import one of the files from the "target" directory and use `window.mtl` to access the lib.
+
+import one of the files from the "target" directory and use `window.mtl` to access the lib.
 
 # Features
 
