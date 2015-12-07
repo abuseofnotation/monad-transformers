@@ -1,29 +1,29 @@
 {
-  "name": "sonne",
+  "name": "monad-transformers",
   "version": "1.0.0",
-  "description": "Practical monads and monad transformers for JS.",
+  "description": "Practical monad transformers for JS.",
   "main": "lib/main.js",
   "directories": {
-    "test": "tests"
+    "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node node_modules/nodeunit/bin/nodeunit"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/boris-marinov/sonne.git"
+    "url": "git+https://github.com/boris-marinov/monad-transformers.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/boris-marinov/sonne/issues"
+    "url": "https://github.com/boris-marinov/monad-transformers/issues"
   },
-  "homepage": "https://github.com/boris-marinov/sonne#readme",
+  "homepage": "https://github.com/boris-marinov/monad-transformers#readme",
   "dependencies": {
-    "nodeunit": "^0.9.1",
-    "sinon": "^1.17.1"
   },
   "devDependencies": {
+    "nodeunit": "^0.9.1",
+    "sinon": "^1.17.1",
     "babelify": "^6.3.0",
     "browserify-versionify": "^1.0.4",
     "grunt": "^0.4.5",

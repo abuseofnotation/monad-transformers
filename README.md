@@ -17,9 +17,10 @@ This package contains a stack component which abstracts away the process of wrap
 
 # How to use
 
-Call `sonne.make` to composes two or several types in a new type:
+Call `make` to compose two or several types in a new type:
 
-     var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
+     var mtl = require('monad-transformers')
+     var listMaybe = mtl.make(mtl.data.list, mtl.data.maybe)
 
 Create an instance of the new type and use it.
   
