@@ -1,7 +1,7 @@
 # monad-transformers
 A JS implementation of all majour monad transformers.
 
-## Features
+# Features
 
 ### Highly composable
 We test every type with every other, to make sure everything works together. 
@@ -16,8 +16,26 @@ The library features an underscore-inspired chaining API, familiar and easy-to-u
 This package contains a stack component which abstracts away the process of wrapping and unwrapping of values, thus making the types easy
 to write and understand.
 
-## How to use
+# How to use
 
-### Create a type
+Call `sonne.make` to composes two or several types in a new type:
 
-  var maybeList = sonne.make(sonne.data.maybe, sonne.data.list)
+  var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
+
+Create an instance of the new type and use it.
+  
+  listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
+    .get('name') // maybe.get
+    .map(spy) // ['foo', 'bar', 'baz']
+
+exports.listMaybeFilter = (test) => {
+  var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
+  var spy = sinon.spy((a) => a)
+  listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
+    .filter(a => a.name === 'foo')
+    .map(spy)
+
+  test.deepEqual(spy.returnValues, [{name:'foo'}])
+  test.done()
+}
+global.list = module.exports
