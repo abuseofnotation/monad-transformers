@@ -37,4 +37,4 @@ Use the methods coming from the types that you composed:
         .filter(a => a.name !== 'bar') //[maybe('foo'), maybe(undefined)]
         
         //Calling a generic monad method
-        .map((val)=>console.log(val)) //foo
+        .map((val)=>console.log(val)) //prints 'foo'
