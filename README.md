@@ -23,7 +23,7 @@ Call `sonne.make` to composes two or several types in a new type:
 
 Create an instance of the new type and use it.
   
-      listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
+      listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {noname: 'baz'}])
 
 Use the methods coming from the types that you composed:
 
