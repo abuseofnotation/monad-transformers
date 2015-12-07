@@ -29,11 +29,11 @@ Use the methods coming from the types that you composed:
 
       listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {noname: 'baz'}])
 
-        //Calling a promise method
+        //Calling a 'maybe' method
         .get('name') // [maybe('foo'), maybe('bar'), maybe(undefined)]
         
-        //Calling a list method
+        //Calling a 'list' method
         .filter(a => a.name !== 'bar') //[maybe('foo'), maybe(undefined)]
         
-        //Calling a general monad method
+        //Calling a generic monad method
         .map((val)=>console.log(val)) //foo
