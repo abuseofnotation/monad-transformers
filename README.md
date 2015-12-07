@@ -24,17 +24,16 @@ Call `sonne.make` to composes two or several types in a new type:
 Create an instance of the new type and use it.
   
       listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
-        .get('name') // maybe.get
-        .map(spy) // ['foo', 'bar', 'baz']
 
-exports.listMaybeFilter = (test) => {
-  var listMaybe = sonne.make(sonne.data.list, sonne.data.maybe)
-  var spy = sinon.spy((a) => a)
-  listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
-    .filter(a => a.name === 'foo')
-    .map(spy)
+Use the methods coming from the types that you composed:
 
-  test.deepEqual(spy.returnValues, [{name:'foo'}])
-  test.done()
-}
-global.list = module.exports
+      listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {noname: 'baz'}])
+
+        //Calling a promise method
+        .get('name') // [maybe('foo'), maybe('bar'), maybe(undefined)]
+        
+        //Calling a list method
+        .filter(a => a.name !== 'bar') //[maybe('foo'), maybe(undefined)]
+        
+        //Calling a general monad method
+        .map((val)=>console.log(val)) //foo
