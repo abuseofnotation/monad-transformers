@@ -1,6 +1,6 @@
 {
   "name": "monad-transformers",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Practical monad transformers for JS.",
   "main": "lib/main.js",
   "directories": {
@@ -19,8 +19,7 @@
     "url": "https://github.com/boris-marinov/monad-transformers/issues"
   },
   "homepage": "https://github.com/boris-marinov/monad-transformers#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "nodeunit": "^0.9.1",
     "sinon": "^1.17.1",
