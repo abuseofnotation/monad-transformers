@@ -1,6 +1,3 @@
-# monad-transformers
-A JS implementation of all majour monad transformers.
-
 # Features
 
 ### Highly composable
