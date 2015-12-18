@@ -35,3 +35,6 @@ Use the methods coming from the types that you composed:
         
         //Calling a generic monad method
         .map((val)=>console.log(val)) //prints 'foo'
+# Docs
+[Types API](docs/api.md)
+[Implementing a monad transformer](docs/implementing-transformer.md)

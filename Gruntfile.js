@@ -90,6 +90,31 @@ module.exports = function (grunt) {
           'test/tests_browser.js': ['test/*.js']
         }
       },
+    }, 
+    concat: {
+	basic_and_extras: {
+  	  options:{
+	    process:function(src){
+	    return src
+              .replace(/\r/gm, '')
+              .split(/\n/)
+              .map((row) => {
+                var twoL = row.slice(0,2)
+                if(twoL === '/*' || twoL === ' *' || twoL === '*/') {
+                  return row.length > 3 ? row.slice(3) : '\n\n'
+                } else {
+                  return '    ' + row + '\n'
+                }
+              })
+              .join('')
+              
+	    }
+	  },
+          files: {
+            'docs/implementing-transformer.md': ['lib/id.js'],
+            'docs/api.md': ['lib/data.js', 'lib/comp.js']
+          },
+       }
     },
     standard: {
       options: {
@@ -107,6 +132,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-exorcise')
   grunt.loadNpmTasks('grunt-standard')
   grunt.loadNpmTasks('grunt-notify')
+  grunt.loadNpmTasks('grunt-contrib-concat')
 
   grunt.registerTask('browser', ['browserify', 'exorcise'])
   grunt.registerTask('test', ['standard', 'nodeunit'])
