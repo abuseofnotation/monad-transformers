@@ -1,12 +1,12 @@
-var sonne = require('../lib/main')
+var mtl = require('../lib/main')
 var sinon = require('sinon')
 var permutations = require('./permutations')
 
-exports.state = permutations(a => (a.indexOf(sonne.comp.state) !== -1), (one, two, three) => {
+exports.state = permutations(a => (a.indexOf(mtl.comp.state) !== -1), (one, two, three) => {
   return {
     saveLoad: (test) => {
       test.expect(3)
-      var state = sonne.make(one, two, three)
+      var state = mtl.make(one, two, three)
       state.of(4)
         .save()
         .map((val) => {
@@ -27,12 +27,12 @@ exports.state = permutations(a => (a.indexOf(sonne.comp.state) !== -1), (one, tw
     },
     value: (test) => {
       var val = 3
-      var state = sonne.make(one, two, three)
+      var state = mtl.make(one, two, three)
       test.equal(state.of(val).value(), val, "value brings back the original value")
       test.done()
     },
     mapState: (test) => {
-      var state = sonne.make(one, two, three)
+      var state = mtl.make(one, two, three)
       var val = state.of(4)
         .mapState((val, state) => {
           return [val, val+1]

@@ -1,11 +1,12 @@
-var sonne = require('../lib/main')
+var mtl = require('../lib/main')
 var sinon = require('sinon')
 var permutations = require('./permutations')
 
-exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two, three) => {
+//TODO add err handling to all types
+exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, three) => {
   return {
     testOne: (test) => {
-      var maybe = sonne.make(one, two, three)
+      var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       var m = maybe.of({foo: {baz: 'bar'}})
         .get('foo')
@@ -17,7 +18,7 @@ exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two
     },
 
     testTwo: (test) => {
-      var maybe = sonne.make(one, two, three)
+      var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       maybe.of(4)
         .map(function (val) {return val + 1})
@@ -32,7 +33,7 @@ exports.maybe = permutations(a => (a.indexOf(sonne.data.maybe) === 0), (one, two
     },
 
     testThree: (test) => {
-      var maybe = sonne.make(one, two, three)
+      var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       maybe.of({foo: 'bar'})
         .get('bar')
