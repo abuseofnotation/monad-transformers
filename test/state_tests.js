@@ -31,15 +31,15 @@ exports.state = permutations(a => (a.indexOf(mtl.comp.state) !== -1), (one, two,
       test.equal(state.of(val).value(), val, "value brings back the original value")
       test.done()
     },
-    mapStateful: (test) => {
+    statefulMap: (test) => {
       var state = mtl.make(one, two, three)
       var val = state.of(4)
-        .mapStateful((val, state) => {
+        .statefulMap((val, state) => {
           return [val, val+1]
         })
         .load()
         .value()
-      test.equal(val, 5, '"mapStateful" lets you consume the value and state and return a new value and a new state.')
+      test.equal(val, 5, '"statefulMap" lets you consume the value and state and return a new value and a new state.')
       test.done()
     }
 

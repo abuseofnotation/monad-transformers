@@ -22,9 +22,9 @@ exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, 
       var spy = sinon.spy((a) => a)
       maybe.of(4)
         .map(function (val) {return val + 1})
-        .chainMaybe((val) => {
+        .maybeMap((val) => {
           test.equals(val, 5, 'A call to "map" modifies the value, and packs it again')
-          return {maybeVal: undefined}
+          return undefined
         })
         .map(spy)
         .value()

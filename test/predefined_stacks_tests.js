@@ -49,8 +49,8 @@ exports.advanced = {
       test.ok(false)
       return a
     })
-    .chainAsync((val) => eventualIncrement(val))
-    .mapStateful((val, state) => {
+    .cont((val) => eventualIncrement(val))
+    .statefulMap((val, state) => {
       test.equal(state, 3)
       test.equal(val, 4)
       return [val, state]
