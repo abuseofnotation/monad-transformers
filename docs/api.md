@@ -14,6 +14,10 @@ A helper to safely retrieve a possibly undefined property of your value.The valu
 
 Chains a function that returns a `maybe` value in the computation
 
+### Definition
+
+![Maybe](img/maybe.png)
+
 ### Source
 
     
@@ -123,6 +127,10 @@ Concats `val` to the additional value.
 
 Calls `f` with the additional value as an argument. 
 
+### Definition
+
+![Writer](img/writer.png)
+
 ###Source
 
     
@@ -182,6 +190,16 @@ Calls `f` with the additional value as an argument.
     }
     
 
+## `comp.state`
+
+The `state` monad transformer allows you to keep one additional state valuewith your computation.
+
+### Definition
+
+![State](img/state.png)
+
+###Source
+
     exports.state = {
       name: 'State',
       of (val) {
@@ -216,4 +234,8 @@ Calls `f` with the additional value as an argument.
         }, state())
       }
     }
+## References
+
+All images, taken from [the Wikipedia article on monad transformers](https://en.wikipedia.org/wiki/Monad_transformer).
+
     
