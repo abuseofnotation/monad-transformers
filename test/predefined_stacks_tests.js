@@ -8,6 +8,8 @@ const eventualIncrement = (val) =>
     setTimeout(() => resolve(val+1), 10)
   }
 
+//const writeState = (m) => m.statefulChain((val, state) => )
+
 exports.advanced = {
 
   of (test) {
@@ -65,3 +67,4 @@ exports.advanced = {
   }
   
 }
+

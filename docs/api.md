@@ -17,6 +17,8 @@ Chains a function that returns a `maybe` value in the computation
 ### Source
 
     
+    //TODO use this
+    const nothing = {maybeVal:undefined}
     exports.maybe = {
       name: 'Maybe',
       // (val) => M({maybeVal:val})
@@ -40,8 +42,8 @@ Chains a function that returns a `maybe` value in the computation
       get (key, val) {
         return this.of(val[key])
       },
-      chainMaybe (funk, val) {
-        return this.outer.of(funk(val))
+      maybeMap (funk, val) {
+        return this.of(funk(val))
       }
     }
     
@@ -202,8 +204,11 @@ Calls `f` with the additional value as an argument.
       save (val) {
         return (prevState) => this.outer.of([val, val])
       },
-      mapState (funk, val) {
+      statefulMap (funk, val) {
         return (prevState) => this.outer.of(funk(val, prevState))
+      },
+      statefulChain(funk, val) {
+        return (prevState) => funk(val, prevState)
       },
       value (funk, state) {
         return this.outer.value((params) => {
