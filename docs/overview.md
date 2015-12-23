@@ -4,7 +4,7 @@ The package consists of the following components:
 
 ## Object wrapper
 
-The object wrapper, exposed via the `mtl.make` function, combines one or several monad transformer definitions and mixes them into one (Fantasy Land compliant)[https://github.com/fantasyland/fantasy-land] monad.
+The object wrapper, exposed via the `mtl.make` function, combines one or several monad transformer definitions and mixes them into one [Fantasy Land compliant](https://github.com/fantasyland/fantasy-land) monad.
 
     const mtl = {}
     mtl.make = require('./wrapper')
