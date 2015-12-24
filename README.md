@@ -3,7 +3,9 @@
 Monad transformers are composable monads. They are cool. See 
 [this article](http://book.realworldhaskell.org/read/monad-transformers.html).
 
-Maybe you need to understand monads first, before you start with transformers. For this, see [my other library](http://boris-marinov.github.io/funktion/).
+Maybe you need to understand monads first, before you start with transformers. 
+Read [this book](https://github.com/MostlyAdequate/mostly-adequate-guide) and/or
+see [my other library](http://boris-marinov.github.io/funktion/).
 
 # About this library
 
