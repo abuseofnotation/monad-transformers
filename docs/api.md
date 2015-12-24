@@ -10,7 +10,7 @@ The `maybe` monad transformer automatically checks if your value is undefined an
 
 A helper to safely retrieve a possibly undefined property of your value.The value has to be a JS object.
 
-### `value.chainMaybe(f)`
+### `value.maybeMap(f)`
 
 Chains a function that returns a `maybe` value in the computation
 
@@ -50,6 +50,10 @@ Chains a function that returns a `maybe` value in the computation
         return this.of(funk(val))
       }
     }
+
+
+[_View in GitHub_](../lib/data.js)
+
     
 ## `data.list`
 
@@ -112,6 +116,10 @@ _The behaviour of `Array.prototype.map` is covered by the monad transformer `map
         }
       }
     }
+
+
+[_View in GitHub_](../lib/data.js)
+
     
 ## `data.writer`
 
@@ -188,6 +196,10 @@ Calls `f` with the additional value as an argument.
         return this.outer.of([val, funk])
       }
     }
+
+
+[_View in GitHub_](../lib/data.js)
+
     
 
 ## `comp.state`
@@ -234,6 +246,12 @@ The `state` monad transformer allows you to keep one additional state valuewith 
         }, state())
       }
     }
+    
+
+
+[_View in GitHub_](../lib/comp.js)
+
+    
 ## References
 
 All images, taken from [the Wikipedia article on monad transformers](https://en.wikipedia.org/wiki/Monad_transformer).

@@ -163,3 +163,8 @@ Now consider an alternative, a little more complex implementation of the ID mona
 The key difference is that with this monad nesting happens both inside the host monad andoutside of it. If we apply the transformation two times the value becomes:`{idContainer:{idContainer:M({idVal:{idVal:a}})}}`.
 
     
+
+
+[_View in GitHub_](../lib/id.js)
+
+    

@@ -112,6 +112,7 @@ module.exports = function (grunt) {
 	  },
           files: {
             'docs/overview.md': ['lib/main.js'],
+            'docs/wrapper.md': ['lib/wrapper.js'],
             'docs/implementing-transformer.md': ['lib/id.js'],
             'docs/api.md': ['lib/data.js', 'lib/comp.js']
           },
