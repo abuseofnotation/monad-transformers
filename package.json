@@ -19,7 +19,9 @@
     "url": "https://github.com/boris-marinov/monad-transformers/issues"
   },
   "homepage": "https://github.com/boris-marinov/monad-transformers#readme",
-  "dependencies": {},
+  "dependencies": {
+    "data.task": "^3.0.0"
+  },
   "devDependencies": {
     "babel-core": "^6.3.26",
     "babel-loader": "^6.2.0",
