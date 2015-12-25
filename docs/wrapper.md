@@ -8,13 +8,13 @@ You can create a monad constructor using the `mtl.make` function:
 
 ###`mtl.make([baseMonad], monadTransformer1, monadTransformer2)`
 
-####`baseMonad _(monadDefinition)_`
+####`baseMonad (monadDefinition)`
 
 Optionally you can pass the definition of the monad that would sit at the bottom of the stack, as a first argument of the `make` function.
 
 The parameter is optional. By default, the package uses the identity monad as a base.
 
-####`monadTransformer<1-n> _(monadTransformerDefinition)_`
+####`monadTransformer<1-n> (monadTransformerDefinition)`
 
 Pass the definitions of the monad transformers which would augment the base monad. Note that monad transformations are usually not commutative, so the order in which the argumentsare placed matters.
 
@@ -38,7 +38,7 @@ Constructs a monad from a value which obeys the structure of the monad stack i.e
 
 ## Using monads
 
-Again there are many methods that you would use to manipulate a monad which are [type-specific](api.md).Here are the generic ones:
+Again there are many methods that you would use to manipulate a monad which are [type-specific](api.md). Here are the generic ones:
 
 ###`monad.map(f)`
 
