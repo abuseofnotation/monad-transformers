@@ -4,7 +4,7 @@ Monad transformers are tricky, and one of the reasons for this is that they requ
 
 One of the aims of this package is to reduce the amount of wrapping and unwrapping needed for making a new transformer and to provide an easy way to define and combine transformers.  
 
-With it, all it takes to implement a transformer is implement these four functions:  `of` (AKA `return`), `chain` (AKA `flatMap`) `lift` and `value`(AKA `run`) 
+It does this by defining a monad transformer definition format, which allows you to specify  your transformer only by specifying its transformations on the values.  With it, all it takes to implement a transformer is implement these four functions:  `of` (AKA `return`), `chain` (AKA `flatMap`) `lift` and `value`(AKA `run`) 
 
 ## The trivial implementation 
 
