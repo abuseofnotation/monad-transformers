@@ -1,24 +1,24 @@
-# Types API
+# Types API 
 
-Here is a list of all monad transformers and the methods that they add to the wrapper object.
+Here is a list of all monad transformers and the methods that they add to the wrapper object. 
 
-## `data.maybe`
+## `data.maybe` 
 
-The `maybe` monad transformer automatically checks if your value is undefined andstops the computation if it is.
+The `maybe` monad transformer automatically checks if your value is undefined and stops the computation if it is. 
 
-### `value.get(key)`
+### `value.get(key)` 
 
-A helper to safely retrieve a possibly undefined property of your value.The value has to be a JS object.
+A helper to safely retrieve a possibly undefined property of your wrapped value. 
 
-### `value.maybeMap(f)`
+### `value.maybeMap(f)` 
 
-Chains a function that returns a `maybe` value in the computation
+Chains a function that returns a `maybe` value in the computation 
 
-### Definition
+### Definition 
 
-![Maybe](img/maybe.png)
+![Maybe](img/maybe.png) 
 
-### Source
+### Source 
 
     
     //TODO use this
@@ -52,24 +52,24 @@ Chains a function that returns a `maybe` value in the computation
     }
 
 
-[_View in GitHub_](../lib/data.js)
+[_View in GitHub_](../lib/data.js) 
 
     
-## `data.list`
+## `data.list` 
 
-The `list` monad transformer allows you to operate on a list of values.instead of on a single value.
+The `list` monad transformer allows you to operate on a list of values. instead of on a single value. 
 
-### `List.fromArray(val)`
+### `List.fromArray(val)` 
 
-Wraps an array in a list monad transformer instance.
+Wraps an array in a list monad transformer instance. 
 
-### `values.filter(fn)`
+### `values.filter(fn)` 
 
-Filters out the values that don't match the predicate. Same as `Array.prototype.filter`.
+Filters out the values that don't match the predicate. Same as `Array.prototype.filter`. 
 
-_The behaviour of `Array.prototype.map` is covered by the monad transformer `map` method._
+_The behaviour of `Array.prototype.map` is covered by the monad transformer `map` method._ 
 
-### Source
+### Source 
 
     
     exports.list = {
@@ -118,28 +118,28 @@ _The behaviour of `Array.prototype.map` is covered by the monad transformer `map
     }
 
 
-[_View in GitHub_](../lib/data.js)
+[_View in GitHub_](../lib/data.js) 
 
     
-## `data.writer`
+## `data.writer` 
 
-The writer monad transformer augments the wrapped value with one additional valuewhich may be used for storing some additional information about the computation.
+The writer monad transformer augments the wrapped value with one additional value which may be used for storing some additional information about the computation. 
 
-The additional value must have a `concat` method, as `String` or `Array`.
+The additional value must be an object that has a `concat` method (as String or Array). 
 
-### `value.tell(val)`
+### `value.tell(val)` 
 
-Concats `val` to the additional value.
+Concats `val` to the additional value. 
 
-### `value.listen(f)`
+### `value.listen(f)` 
 
-Calls `f` with the additional value as an argument. 
+Calls `f` with the additional value as an argument.  
 
-### Definition
+### Definition 
 
-![Writer](img/writer.png)
+![Writer](img/writer.png) 
 
-###Source
+###Source 
 
     
     const computeLog = (log, newLog) => {
@@ -198,19 +198,35 @@ Calls `f` with the additional value as an argument.
     }
 
 
-[_View in GitHub_](../lib/data.js)
+[_View in GitHub_](../lib/data.js) 
 
     
 
-## `comp.state`
+## `comp.state` 
 
-The `state` monad transformer allows you to keep one additional state valuewith your computation.
+The `state` monad transformer allows you to keep one additional mutable state value with your computation. 
 
-### Definition
+### `value.save()` 
 
-![State](img/state.png)
+Saves the return value of the function in the state, overwriting the previous one. 
 
-###Source
+### `value.load()` 
+
+Returns the current state. 
+
+### `value.statefulMap(f)` 
+
+Maps over the current value and state with `f`. The function should return an array containing two elements - the new value and the new state. 
+
+### `value.statefulChain(f)` 
+
+Maps over the current value and state with `f`. The function should return a new monad value. 
+
+### Definition 
+
+![State](img/state.png) 
+
+###Source 
 
     exports.state = {
       name: 'State',
@@ -249,11 +265,11 @@ The `state` monad transformer allows you to keep one additional state valuewith 
     
 
 
-[_View in GitHub_](../lib/comp.js)
+[_View in GitHub_](../lib/comp.js) 
 
     
-## References
+## References 
 
-All images, taken from [the Wikipedia article on monad transformers](https://en.wikipedia.org/wiki/Monad_transformer).
+All images, taken from [the Wikipedia article on monad transformers](https://en.wikipedia.org/wiki/Monad_transformer). 
 
     

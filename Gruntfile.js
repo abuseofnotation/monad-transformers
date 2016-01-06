@@ -13,7 +13,7 @@ module.exports = function (grunt) {
               .map((row) => {
                 var twoL = row.slice(0,2)
                 if(twoL === '/*' || twoL === ' *' || twoL === '*/') {
-                  return row.length > 3 ? row.slice(3) : '\n\n'
+                  return row.length > 3 ? row.slice(3) + ' ' : '\n\n'
                 } else {
                   return '    ' + row + '\n'
                 }

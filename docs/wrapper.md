@@ -1,64 +1,64 @@
-# The object wrapper
+# The object wrapper 
 
-The library provides a module which allows you to combine several monad transformer definitionsand create a object-oriented wrapper for using the resulting monad.
+This library provides a module which allows you to combine several monad transformer definitions and create a object-oriented wrapper for using the resulting monad. 
 
-## Creating a monad constructor
+## Creating a monad constructor 
 
-You can create a monad constructor using the `mtl.make` function:
+You can create a monad constructor using the `mtl.make` function: 
 
-###`mtl.make([baseMonad], monadTransformer1, monadTransformer2)`
+###`mtl.make([baseMonad], monadTransformer1, monadTransformer2)` 
 
-####`baseMonad (monadDefinition)`
+####`baseMonad - monadDefinition` 
 
-Optionally you can pass the definition of the monad that would sit at the bottom of the stack, as a first argument of the `make` function.
+Optionally you can pass the definition of the monad that would sit at the bottom of the stack,  as a first argument of the `make` function. 
 
-The parameter is optional. By default, the package uses the identity monad as a base.
+The parameter is optional. By default, the package uses the identity monad as a base. 
 
-####`monadTransformer<1-n> (monadTransformerDefinition)`
+####`monadTransformer<1-n> - monadTransformerDefinition` 
 
-Pass the definitions of the monad transformers which would augment the base monad. Note that monad transformations are usually not commutative, so the order in which the argumentsare placed matters.
+Pass the definitions of the monad transformers which would augment the base monad.  Note that monad transformations are usually not commutative so the order in which the arguments are placed matters. 
 
-The function returns an `objectWrapper` which allows you instantiate monads from all kinds of values.
+The function returns an `objectWrapper` which allows you instantiate monads from all kinds of values. 
 
-## Creating monads
+## Creating monads 
 
-Monads are generally created using [type-specific methods](api.md) like `fromArray` (for stacks that include thelist transformation, or `fromState` (for stateful computations), but for the sake of completenessseveral generic methods are also provided.
+Monads are generally created using [type-specific methods](api.md) like `fromArray` (for stacks that include the list transformation, or `fromState` (for stateful computations) but several generic methods are also provided. 
 
-### `objectWrapper.of(value)`
+### `objectWrapper.of(value)` 
 
-Constructs a monad from a plain non-monadic value.
+Constructs a monad from a plain non-monadic value. 
 
-### `objectWrapper.lift(monadTransformerDefinition, value)`
+### `objectWrapper.lift(monadTransformerDefinition, value)` 
 
-Constructs a monad from a value created at a higher level of the stack. See [this article](https://en.wikibooks.org/wiki/Haskell/Monad_transformers#Lifting) for more information.
+Constructs a monad from a value created at a higher level of the stack. See  [this article](https://en.wikibooks.org/wiki/Haskell/Monad_transformers#Lifting) for more information. 
 
-### `objectWrapper(value)`
+### `objectWrapper(value)` 
 
-Constructs a monad from a value which obeys the structure of the monad stack i.e. "wraps" the valueinto a monadic interface.
+Constructs a monad from a value which obeys the structure of the monad stack i.e. it "wraps" the value into a monadic interface. 
 
-## Using monads
+## Using monads 
 
-Again there are many methods that you would use to manipulate a monad which are [type-specific](api.md). Here are the generic ones:
+Again there are many methods that you would use to manipulate a monad which are [type-specific](api.md).  Here are the generic ones: 
 
-###`monad.map(f)`
+###`monad.map(f)` 
 
-Applies `f` to the value or values that are inside the monad and wraps the resulting value in a new monad instance.
+Applies `f` to the value or values that are inside the monad and wraps the resulting value in a new monad instance. 
 
-###`monad.chain(f)`
+###`monad.chain(f)` 
 
-Applies `f` to the value or values that are inside the monad and returns a new monad instance
+Applies `f` to the value or values that are inside the monad and returns a new monad instance 
 
-###`monad.tap(f)`
+###`monad.tap(f)` 
 
-Applies the f to the monad and returns the result.
+Applies the f to the monad and returns the result. 
 
-###`monad.value()`
+###`monad.value()` 
 
-Runs the computation inside the monad and returns its value, if applicable.
+Runs the computation inside the monad and returns its value, if applicable. 
 
-For more information, see the [Fantasy Land spec](https://github.com/fantasyland/fantasy-land).
+For more information, see the [Fantasy Land spec](https://github.com/fantasyland/fantasy-land). 
 
-## Source
+## Source 
 
     const createStack = require('./stack')
     
@@ -189,6 +189,6 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
     
 
 
-[_View in GitHub_](../lib/wrapper.js)
+[_View in GitHub_](../lib/wrapper.js) 
 
     
