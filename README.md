@@ -11,7 +11,9 @@ see [my other library](http://boris-marinov.github.io/funktion/).
 
 # About this library
 
-It is inspired by the [mtl](https://hackage.haskell.org/package/mtl) library in Haskell, but contains some JS-specific goodies:
+It is inspired by the [mtl](https://hackage.haskell.org/package/mtl) library in Haskell, but contains some JS-specific goodies.
+
+# Features 
 
 ### Highly composable
 We test every monad transformer type against every other to make sure everything works together. 
