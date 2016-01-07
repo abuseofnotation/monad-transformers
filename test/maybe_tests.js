@@ -6,6 +6,7 @@ var permutations = require('./permutations')
 exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, three) => {
   return {
     testOne: (test) => {
+      debugger
       var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       var m = maybe.of({foo: {baz: 'bar'}})
