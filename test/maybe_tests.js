@@ -6,7 +6,6 @@ var permutations = require('./permutations')
 exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, three) => {
   return {
     testOne: (test) => {
-      debugger
       var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       var m = maybe.of({foo: {baz: 'bar'}})
@@ -36,12 +35,14 @@ exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, 
     testThree: (test) => {
       var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
+      debugger
       maybe.of({foo: 'bar'})
         .get('bar')
         .map(spy)
-        .value()
-      test.equals(spy.called, false, 'When you get an undefined value, maybe is not called ')
-      test.done()
+        .value({onNothing:()=>{
+          test.equals(spy.called, false, 'When you get an undefined value, maybe is not called ')
+          test.done()
+        }})
     }
   }
 })
