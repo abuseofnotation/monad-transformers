@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/boris-marinov/monad-transformers#readme",
   "dependencies": {
-    "data.task": "^3.0.0"
+    "data.task": "^3.0.0",
+    "object-assign": "^4.0.1"
   },
   "devDependencies": {
     "babel-core": "^6.3.26",
