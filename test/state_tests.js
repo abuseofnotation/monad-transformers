@@ -37,10 +37,12 @@ exports.state = permutations(a => (a.indexOf(mtl.comp.state) !== -1), (one, two,
         .statefulMap((val, state) => {
           return [val, val+1]
         })
-        .load()
-        .value()
-      test.equal(val, 5, '"statefulMap" lets you consume the value and state and return a new value and a new state.')
-      test.done()
+        .value({
+          onState:(state) => {
+            test.equal(state, 5, '"statefulMap" lets you consume the value and state and return a new value and a new state.')
+            test.done()
+          }
+        })
     }
 
   }

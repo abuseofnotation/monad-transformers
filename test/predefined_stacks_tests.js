@@ -11,7 +11,6 @@ const eventualIncrement = (val) =>
 //const writeState = (m) => m.statefulChain((val, state) => )
 
 exports.advanced = {
-/*
   of (test) {
     mtl.advanced.of(3)
       .map((val) => val + 1)
@@ -66,6 +65,5 @@ exports.advanced = {
     .value()
     debugger
   }
- */ 
 }
 
