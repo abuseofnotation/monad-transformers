@@ -2,14 +2,12 @@ if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
 const mtl = require('../lib/main')
-
 const eventualIncrement = (val) => 
   (reject, resolve) => {
     setTimeout(() => resolve(val+1), 10)
   }
 
-//const writeState = (m) => m.statefulChain((val, state) => )
-
+//mtl.advanced = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.state)
 exports.advanced = {
   of (test) {
     mtl.advanced.of(3)
@@ -63,7 +61,8 @@ exports.advanced = {
       test.done()
     })
     .value()
-    debugger
   }
 }
+
+
 
