@@ -5,7 +5,9 @@ var createStack = require('../lib/stack')
 var comp = require('../lib/comp')
 var permutations = require('./permutations')
 
-exports.stack = permutations(a => (a.indexOf(comp.state) === -1), (one, two, three) => (test) => {
+exports.stack = permutations(a => (
+      a.indexOf(comp.state) === -1 && a.indexOf(comp.continuation) === -1
+    ), (one, two, three) => (test) => {
     const stack = createStack([one, two, three])
     const oneVal = stack.of(one, 5)
     const onetwoVal = stack.of(two, 5)

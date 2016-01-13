@@ -1,3 +1,6 @@
+if ( global.v8debug ) {
+	global.v8debug.Debug.setBreakOnException()
+}
 var mtl = require('../lib/main')
 var sinon = require('sinon')
 var permutations = require('./permutations')

@@ -12,6 +12,7 @@ exports.list = permutations(a => (a.indexOf(mtl.data.list) !== -1 ), (one, two, 
     value: (test) => {
       var list = mtl.make(one, two, three)
       test.deepEqual(list.fromArray(oneList).value(), oneList, 'A list of one element is regained with the value method')
+      debugger
       test.done()
     },
     filter: (test) => {
