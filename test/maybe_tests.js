@@ -3,14 +3,14 @@ var sinon = require('sinon')
 var permutations = require('./permutations')
 
 //TODO add err handling to all types
-exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, three) => {
+exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) !== -1), (one, two, three) => {
   return {
     testOne: (test) => {
       var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       var m = maybe.of({foo: {baz: 'bar'}})
-        .get('foo')
-        .get('baz')
+        .maybeGet('foo')
+        .maybeGet('baz')
         .map(spy)
         .value()
       test.equals(spy.lastCall.returnValue, 'bar')
@@ -36,7 +36,7 @@ exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) === 0), (one, two, 
       var maybe = mtl.make(one, two, three)
       var spy = sinon.spy((a) => a)
       maybe.of({foo: 'bar'})
-        .get('undefined_key')
+        .maybeGet('undefined_key')
         .map(spy)
         .value({
           onNothing:()=>{

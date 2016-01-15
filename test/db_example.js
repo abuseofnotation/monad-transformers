@@ -34,7 +34,7 @@ const retrieve = (url) =>
 
 const getOccupationInfo = (personInfo) =>
   mtl.advanced.of(personInfo)
-    .get('occupation')
+    .maybeGet('occupation')
     .map(suffix('occupations/'))
     .cont(retrieve)
 
@@ -46,7 +46,16 @@ const getPersonInfo = (name) =>
       mtl.advanced.of(personDetails)
         .chain(getOccupationInfo)
         .map((occupationInfo) => `${personDetails.name} ${occupationInfo.description}` ))
-    
+
+
+const writePersonInfo = (name) =>
+  mtl.advanced.of(name)
+    .map(suffix('users/'))
+    .cont(retrieve)
+    .tellMap((userInfo) => userInfo.name)
+    .tell(" ")
+    .chain(getOccupationInfo)
+    .tellMap((occupationInfo => occupationInfo.description))
 
 exports.dbSimple = (test) =>
   getPersonInfo('john')
@@ -57,22 +66,21 @@ exports.dbSimple = (test) =>
       })
     }) 
 
-exports.dbTaskError = (test) =>
+exports.dbWriter = (test) =>
+  writePersonInfo('john')
+    .tell(", ")
+    .chain((a) => writePersonInfo('jim'))
+    .run((result) => {
+      result().fork((err)=>{debugger;test.ok(false)}, (result)=>{
+        test.equal(result.maybeVal[1], 'John writes code, Jim feeds the animals')
+        test.done()
+      })
+    }) 
+
+exports.dbTask = (test) =>
   getPersonInfo('UndefinedPerson')
     .run((result) => 
       result().fork((err)=> {
         test.equal(err.error, 'Invalid URL - users/UndefinedPerson') 
         test.done()
       }, (success) => {test.ok(false)}))
-/*
-exports.dbUndefinedProperties = (test) =>
-  getPersonInfo('max')
-    .run((result) => {
-      result().fork((err)=>{debugger;test.ok(false)}, (result)=>{
-        test.equal(result.maybeVal,undefined)
-        test.done()
-      })
-    }) 
-*/
-
-
