@@ -17,8 +17,8 @@ exports.advanced = {
         test.done()
       })
   },
-  fromTask (test) {
-    mtl.advanced.fromTask((reject, resolve) => {
+  fromContinuation (test) {
+    mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(() => resolve(3), 10)
     })
       .map((val) => val + 1)
@@ -28,7 +28,7 @@ exports.advanced = {
       })
   },
   error (test) {
-    mtl.advanced.fromTask((reject, resolve) => {
+    mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(()=>reject(3), 10)
     })
       .map((val) => val + 1)
@@ -40,7 +40,7 @@ exports.advanced = {
 
   },
   stateIntegration (test) {
-    mtl.advanced.fromTask((reject, resolve) => {
+    mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(()=>resolve(3), 10)
     })
     .save()
