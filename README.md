@@ -69,6 +69,7 @@ But better read the docs first:
 
 # Docs
 * [Overview](docs/overview.md)
+* [An example](docs/example.md)
 * [Object wrapper API](docs/wrapper.md)
 * [Types API](docs/api.md)
 * [Implementing a monad transformer](docs/implementing-transformer.md)

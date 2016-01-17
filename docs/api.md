@@ -6,7 +6,7 @@ Here is a list of all monad transformers and the methods that they add to the wr
 
 The `maybe` monad transformer automatically checks if your value is undefined and stops the computation if it is. 
 
-### `value.get(key)` 
+### `value.maybeGet(key)` 
 
 A helper to safely retrieve a possibly undefined property of your wrapped value. 
 
@@ -21,16 +21,18 @@ Chains a function that returns a `maybe` value in the computation
 ### Source 
 
     
+    const idFunc = a => a
     //TODO use this
     const nothing = {maybeVal:undefined}
     exports.maybe = {
+      // Standard functions
       name: 'Maybe',
       // (val) => M({maybeVal:val})
       of (val) { return this.outer.of({maybeVal: val }) },
       // (val => M({maybeVal:val}) , M({maybeVal:val})) => M({maybeVal:val})
       chain (funk, mMaybeVal) {
         return this.outer.chain((maybeVal) => {
-          return maybeVal.maybeVal === undefined ? maybeVal : funk(maybeVal.maybeVal)
+          return maybeVal.maybeVal === undefined ? this.outer.of(maybeVal) : funk(maybeVal.maybeVal)
         }, mMaybeVal)
       },
       // (M(val)) => M({maybeVal:val})
@@ -43,7 +45,11 @@ Chains a function that returns a `maybe` value in the computation
           return maybeVal.maybeVal === undefined ? maybeVal : funk(maybeVal.maybeVal)
         }, mMaybeVal)
       },
-      get (key, val) {
+      fold (value, maybeVal) {
+          return maybeVal.maybeVal === undefined ? (this.onNothing || idFunc )() : value(maybeVal.maybeVal)
+      },
+      // Custom functions
+      maybeGet (key, val) {
         return this.of(val[key])
       },
       maybeMap (funk, val) {
@@ -74,6 +80,7 @@ _The behaviour of `Array.prototype.map` is covered by the monad transformer `map
     
     exports.list = {
       name: 'List',
+      // Standard functions
       // (val) => M([val])
       of (val) {
         return this.outer.of([val])
@@ -101,6 +108,10 @@ _The behaviour of `Array.prototype.map` is covered by the monad transformer `map
           return list.map(funk)
         }, val)
       },
+      fold (value, list) {
+        return list.map(value)
+      },
+      // Custom functions
       filter (funk, val) {
         if (funk(val)) {
           return this.of(val)
@@ -129,11 +140,11 @@ The additional value must be an object that has a `concat` method (as String or 
 
 ### `value.tell(val)` 
 
-Concats `val` to the additional value. 
+Concats `val` to the current log value. 
 
-### `value.listen(f)` 
+### `value.tellMap(f)` 
 
-Calls `f` with the additional value as an argument.  
+Calls `f` with the current value as an argument and then concats the result to the current log value. 
 
 ### Definition 
 
@@ -142,7 +153,7 @@ Calls `f` with the additional value as an argument.
 ###Source 
 
     
-    const computeLog = (log, newLog) => {
+    const concatLog = (log, newLog) => {
       if(log === undefined) {
         return newLog
       } else {
@@ -156,7 +167,7 @@ Calls `f` with the additional value as an argument.
     
     exports.writer = {
       name: 'Writer',
-    
+      // Standard functions
       // (val) => M([val, log])
       of (val) {
         return this.outer.of([val, undefined])
@@ -165,13 +176,11 @@ Calls `f` with the additional value as an argument.
       // (val => M([val, log]), M([val, log])) => M([val, log])
       chain (funk, mWriterVal) {
         return this.outer.chain((writerVal) => {
-          const val = writerVal[0]
-          const log = writerVal[1] 
+          const val = writerVal[0], log = writerVal[1] 
           const newMWriterVal = funk(val)
           return this.outer.chain((newWriterVal) => {
-            const newVal = newWriterVal[0]
-            const newLog = typeof newWriterVal[1] === 'function' ? newWriterVal[1](log) : newWriterVal[1]
-            return this.outer.of([newVal, computeLog(log, newLog)])
+            const newVal = newWriterVal[0], newLog = newWriterVal[1]
+            return this.outer.of([newVal, concatLog(log, newLog)])
           }, newMWriterVal)
         }, mWriterVal)
     
@@ -181,19 +190,23 @@ Calls `f` with the additional value as an argument.
       lift (mVal) {
         return this.outer.chain((val) => this.outer.of([val, undefined]), mVal)
       },
-    
       // ((val) => b, M([val, log])) => b
       value (funk, mWriterVal) {
         return this.outer.value((writerVal) => {
           return funk(writerVal[0])
         }, mWriterVal)
       },
-    
+      // ((val) => b, M([val, log])) => b
+      fold (value, writerVal) {
+        (this.onWriterLog || idFunc)(writerVal[1])
+        return value(writerVal[0])
+      },
+      // Custom functions
       tell (message, val) {
         return this.outer.of([val, message])
       },
-      listen (funk, val){
-        return this.outer.of([val, funk])
+      tellMap (fn, val) {
+        return this.outer.of([val, fn(val)])
       }
     }
 
@@ -228,8 +241,10 @@ Maps over the current value and state with `f`. The function should return a new
 
 ###Source 
 
+    const idFunc = a=>a
     exports.state = {
       name: 'State',
+      //Standard functions:
       of (val) {
         return (prevState) => this.outer.of([val, prevState])
       },
@@ -244,6 +259,19 @@ Maps over the current value and state with `f`. The function should return a new
         return (prevState) =>
           this.outer.chain((innerValue) => this.outer.of([innerValue, prevState]), val)
       },
+      value (f, state) {
+        return this.outer.value((params) => {
+          return f(params[0])
+        }, state())
+      },
+      run (f, state) {
+        return f(state())
+      },
+      fold (value, params) {
+        (this.onState || idFunc)(params[1])
+        return value(params[0])
+      },
+      //Custom functions:
       load (val) {
         return (prevState) => this.outer.of([prevState, prevState])
       },
@@ -255,11 +283,6 @@ Maps over the current value and state with `f`. The function should return a new
       },
       statefulChain(funk, val) {
         return (prevState) => funk(val, prevState)
-      },
-      value (funk, state) {
-        return this.outer.value((params) => {
-          return funk(params[0])
-        }, state())
       }
     }
     

@@ -48,6 +48,9 @@ Finally the `value` function provides a way to get 'the value back' What it does
       // ((val) => otherVal, M(val)) => otherVal
       value (fn, val) {
         return this.outer.value(fn, val)
+      },
+      fold (value, val) {
+        return value(val)
       }
     }
     
@@ -105,6 +108,9 @@ Lastly we have the `value` function (or the interpreter), which unwraps a previo
         return this.outer.value((idVal)=> {
           return fn(idVal.idVal)
         }, mIdVal)
+      },
+      fold (value, idVal) {
+        return value(idVal.idVal)
       }
     }
     
@@ -157,6 +163,12 @@ Now consider an alternative, a little more complex implementation of the ID mona
         return this.outer.value((idVal)=> {
           return fn(idVal.idVal)
         }, idContainerMIdVal.idContainer)
+      },
+      run (fn, idContainerMIdVal) {
+        return fn(idContainerMIdVal.idContainer)
+      },
+      fold (value, idVal) {
+        return value(idVal.idVal)
       }
     }
     

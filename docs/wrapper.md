@@ -61,9 +61,17 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
 ## Source 
 
     const createStack = require('./stack')
+    const assign = require('object-assign')
+    const idFunc = a => a
     
     // Checks if a given property is part of the general monad definition interface
-    const isReserverMonadKey = (key) => key !== 'name' && key !== 'map' && key !== 'of' && key !== 'chain' && key !== 'lift' && key !== 'value'
+    const isReserverMonadKey = (key) => key !=='run' && key !== 'fold' && key !== 'name' && key !== 'map' && key !== 'of' && key !== 'chain' && key !== 'lift' && key !== 'value'
+    
+    //combines an array of async functions with signature into one functions.
+    // [ (callback, value) => () ] => (value) => ()
+    const asyncCompose = (functions, self) => functions.reduce((f, newF) => {
+      return (val) => newF.call(self, f, val)
+    })
     
     // Maps the values of a given obj excluding the reserved ones.
     const monadMapVals = (funk, obj) => {
@@ -88,15 +96,31 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
       return Object.freeze(obj)
     }
     
+    
     module.exports = function make () {
       // Initilize the stack component, that actually does most of the work
       const stack = createStack(Array.prototype.slice.call(arguments))
+      
+      //Collect the default run functions
+      const runFunctions = stack.members.map((a)=>a.run)
+    
+      //Create a function that runs the monad stack with the specified callback
+      const makeRunner = (callback) => asyncCompose([callback].concat(runFunctions))
+    
+      const defaultFold = function (f, val){
+        (this.onValue || idFunc)(val)
+        return f(val)
+      }
+      //Collect the default fold functions
+      const foldFunctions = stack.members.map((a)=>a.fold).concat([defaultFold]).reverse()
+    
+      //Create a function that folds the monad stack
+      const makeFold = (callbacks) => asyncCompose([idFunc].concat(foldFunctions), callbacks)
     
       // Define the prototype of the resulting monad stack
       const baseStackProto = {
         stack: stack,
         prototype: this.prototype,
-        // Add chain function
         chain (funk) {
           const funkAndUnwrap = (val) => unwrap(funk(val))
           if (!process.debug) {
@@ -105,9 +129,8 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
           return create(stack.last.chain(funkAndUnwrap, this._value))
         },
         lift (proto, val) {
-          return create(stack.lift(proto, val))
+          return create(stack.lift(val, stack.membersOriginal.indexOf(proto)))
         },
-        // Add 'map' and 'of' functions
         of (value) {
           return create(stack.last.of(value))
         },
@@ -117,27 +140,38 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
         tap (funk) {
           return funk(this)
         },
-        value (callback) {
-          callback = callback !== undefined ? callback : a => a
-          return stack.last.value(callback, this._value)
+        kleisi (monad) {
+          return this.chain((_) => monad)
+        },
+        value (callbacks) {
+          callbacks = typeof callbacks === 'function' ? { onValue: callbacks } : callbacks
+          return this.run(makeFold(callbacks || {}))
+        },
+        run (callback) {
+          return makeRunner(callback)(this._value)
+        },
+        toString () {
+          return JSON.stringify(this._value)
         }
       }
     
-      // Promotes a method from a monad definition so it can be used for chaining
-      const toInstance = (funk, outer) => function () {
+      // Promotes a function from a monad definition to a monad stack method, so it can be used for chaining
+      const promoteToMethod = (funk, monadDefinition) => function () {
         const args = Array.prototype.slice.call(arguments)
+        const level = stack.members.indexOf(monadDefinition)
         return this.chain((val) => {
-          return create(stack.lift(outer.original, funk.apply(outer, args.concat([val]))))
+          return create(stack.lift(funk.apply(monadDefinition, args.concat([val])),level) )
         })
       }
     
-      // Promotes a method from a monad definition so it can be used as a static method
-      const toConstructor = (funk, outer) => function () {
-        return create(stack.lift(outer.original, funk.apply(outer, arguments)))
+      // Promotes a function from a monad definition to a stack constructor
+      const promoteToConstructor = (funk, monadDefinition) => function () {
+        const level = stack.members.indexOf(monadDefinition)
+        return create(stack.lift(funk.apply(monadDefinition, arguments), level))
       }
     
       // Augment the stack prototype with helper methods
-      const stackProto = Object.assign.apply(null, [baseStackProto].concat(stack._members.map(monad => monadMapVals(toInstance, monad))))
+      const stackProto = assign.apply(null, [baseStackProto].concat(stack.members.map(monad => monadMapVals(promoteToMethod, monad))))
     
       // The constructor function creates a new object and wraps it in the stack prototype
       const create = (val) => {
@@ -150,42 +184,9 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
       create.prototype = stackProto
     
       // Augment the stack constructor with helper methods
-      return Object.assign.apply(null, [create].concat(stack._members.map(monad => monadMapVals(toConstructor, monad))))
+      return assign.apply(null, [create].concat(stack.members.map(monad => monadMapVals(promoteToConstructor, monad))))
     }
     
-    // Object.assign polyfil
-    if (!Object.assign) {
-      Object.defineProperty(Object, 'assign', {
-        enumerable: false,
-        configurable: true,
-        writable: true,
-        value: function (target) {
-          'use strict'
-          if (target === undefined || target === null) {
-            throw new TypeError('Cannot convert first argument to object')
-          }
-    
-          var to = Object(target)
-          for (var i = 1; i < arguments.length; i++) {
-            var nextSource = arguments[i]
-            if (nextSource === undefined || nextSource === null) {
-              continue
-            }
-            nextSource = Object(nextSource)
-    
-            var keysArray = Object.keys(nextSource)
-            for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
-              var nextKey = keysArray[nextIndex]
-              var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey)
-              if (desc !== undefined && desc.enumerable) {
-                to[nextKey] = nextSource[nextKey]
-              }
-            }
-          }
-          return to
-        }
-      })
-    }
     
 
 
