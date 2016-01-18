@@ -1,6 +1,6 @@
 {
   "name": "monad-transformers",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Practical monad transformers for JS.",
   "main": "lib/main.js",
   "directories": {
