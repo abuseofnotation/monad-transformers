@@ -11,36 +11,42 @@
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
-
-const data = {
-  'users/john': {
-    name:'John',
-    occupation: 'developer'
-  },
-  'users/max': {
-    name: 'Max' //Has no occupation
-  },
-  'users/jim': {
-    name:'Jim',
-    occupation: 'farmer'
-  },
-  'occupations/developer': {
-    description: 'writes code'
-  },
-  'occupations/farmer': {
-    description: 'feeds the animals'
+const initData = () => {
+  const data = {
+    'users/john': {
+      name:'John',
+      occupation: 'developer'
+    },
+    'users/max': {
+      name: 'Max' //Has no occupation
+    },
+    'users/jim': {
+      name:'Jim',
+      occupation: 'farmer'
+    },
+    'occupations/developer': {
+      description: 'writes code'
+    },
+    'occupations/farmer': {
+      description: 'feeds the animals'
+    }
+  }
+  return {
+    getResource (url, error, success) {
+      setTimeout(() => data[url]!== undefined ? success(data[url]) : error({error:`Invalid URL - ${url}`}), 10)
+    },
+    postResource (url, value, error, success) {
+      setTimeout(() => { data[url] = value; success(value) }, 10)
+    }
   }
 }
-
-const getResource = (url, error, success ) =>
-    setTimeout(() => data[url]!== undefined ? success(data[url]) : error({error:`Invalid URL - ${url}`}), 10)
-
 /* ## Defining some helpers
  * 
  * Before we start, let's define several helpers that we will use.
  */
 
-const mGetResource = (url) => getResource.bind(null, url)
+const data = initData()
+const mGetResource = (url) => data.getResource.bind(null, url)
 
 const suffix = (suffix) =>
   (str) => suffix + str
@@ -248,8 +254,6 @@ exports.dbLog = (test) =>
  * This would free us from the burden of having to build the result explicitly.
  *
  * The following shows a new version of our program that uses the Writer monad to retrieve results about two people.
- *
- * Leaving you with it. Bye.
  */
 
 const wGetResourceFrom = (type) => 
@@ -279,4 +283,4 @@ exports.dbWriter = (test) =>
       test.done()
     }) 
 
-
+exports.initData = initData
