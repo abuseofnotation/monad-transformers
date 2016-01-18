@@ -24,4 +24,3 @@ exports.writer = permutations(a => (a.indexOf(mtl.data.writer) !== -1), (one, tw
     }
   }
 })
-global.writer = module.exports
