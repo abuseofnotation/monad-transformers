@@ -8,6 +8,7 @@
  * Our task will be related to retrieving info about the users and their occupations and handling different kinds
  * of errors.
  */
+const mtl = require('../lib/main')
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
@@ -48,13 +49,14 @@ const initData = () => {
 const data = initData()
 const mGetResource = (url) => data.getResource.bind(null, url)
 
-const suffix = (suffix) =>
-  (str) => suffix + str
+const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
 
 /*
  * - `mGetResource` is just a curried version of the function that we defined in the mock. 
  *
  * - `suffix` is a function for concatenating strings, which we can use to construct a URL of a given resource.
+ * We are defining it using `curry` which means that calling it with just one argument will return a new function
+ * that 
  *
  * ### Composing functions with mtl
  *
@@ -82,16 +84,15 @@ const ordinaryGetResourceFrom = compose(suffix, mGetResource)
 const Task = require('data.task')
 
 const taskGetResourceFrom = (type) => 
-  (mResourceId) => mResourceId
-    .map(suffix(type + '/'))
+  (id) => 
+    m.of(suffix(type, id))
     .chain((url) => m.fromTask(new Task(mGetResource(url))))
 /*
  * This works, but there is a slightly prettier way to write it using the `cont` function, which creates the
  * task behind the scenes.
  */
-const getResourceFrom = (type) => 
-  (mResourceId) => mResourceId
-    .map(suffix(type + '/'))
+const getResourceFrom = (type) => (id) => 
+    m.of(suffix(type, id))
     .tellMap((url) => `Retrieving ${url}... `) 
     .cont(mGetResource)
 /*
@@ -124,12 +125,11 @@ const getResourceFrom = (type) =>
  */
 
 const getOccupationInfo = (mPersonalInfo) =>
-  mPersonalInfo
+  m.of(mPersonalInfo)
     .maybeGet('occupation')
-    .tap(getResourceFrom('occupations'))
+    .chain(getResourceFrom('occupations'))
 
-/* Notice also how we compose mtl functions by using `tap`. `tap` is nothing hard - it just calls the 
- * specified function with the current value as an argument.
+/* Notice also how we compose mtl functions by using `chain`.
  *
  * ## Writing our program
  *
@@ -138,16 +138,15 @@ const getOccupationInfo = (mPersonalInfo) =>
  * For example, let's write a snippet that first retrieves the details for a given user then retrieve the details of his
  * occupation and finally displays both pieces of info one after the other. Do you want to do that?
  *
- * OK, I guess it is time to request the mtl library then: 
  */
 
-const m = require('../lib/main').advanced 
+const m = mtl.advanced 
 
 const getPersonInfo = (name) =>
-  m.of(name)  //1
-    .tap(getResourceFrom('users')) //2
+  m.of(name) //1
+    .chain(getResourceFrom('users')) //2
     .chain((personDetails) => //3
-      getOccupationInfo(m.of(personDetails)) //4
+      getOccupationInfo(personDetails) //4
         .map((occupationInfo) => `${personDetails.name} ${occupationInfo.description}` )) //5
 /*
  * There should be nothing new for you in this snippet. Let`s review it line by line, as a summary of this
@@ -155,12 +154,11 @@ const getPersonInfo = (name) =>
  *
  * 1. We begin by puttin a regular value into a monad, using the `of` function.
  *
- * 2. Again, tap is just a way to compose two monadic functions together. So what we wrote so far is
- * equivalent to `getResourceFrom('users')(m.of(name))`
- *
- * 3. With `chain` we compose a function that receives a normal value and returns a monadic value.
+ * 2. With `chain` we compose a function that receives a normal value and returns a monadic value.
  * `chain` is actually the quintessential monadic function, so there is a lot of info available
  * about it.
+ *
+ * 3. We `chain` again, this time with an inline function.
  *
  * 4. When we are calling `chain` we have to return a monadic value, and we do that.
  * Again when you have a function that works in a monadic context, and you want to use it with 
@@ -258,7 +256,7 @@ exports.dbLog = (test) =>
 
 const wGetResourceFrom = (type) => 
   (mResourceId) => mResourceId
-    .map(suffix(type + '/'))
+    .map(suffix(type))
     .cont(mGetResource)
 
 const wGetOccupationInfo = (mPersonalInfo) =>
@@ -267,7 +265,7 @@ const wGetOccupationInfo = (mPersonalInfo) =>
 
 const writePersonInfo = (name) =>
   m.of(name)
-    .map(suffix('users/'))
+    .map(suffix('users'))
     .cont(mGetResource)
     .tellMap((userInfo) => userInfo.name)
     .tell(" ")
@@ -283,4 +281,3 @@ exports.dbWriter = (test) =>
       test.done()
     }) 
 
-exports.initData = initData

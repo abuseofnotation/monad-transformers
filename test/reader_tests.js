@@ -10,7 +10,7 @@ exports.reader = permutations(a => (a.indexOf(mtl.comp.reader) !== -1), (one, tw
     environment: (test) => {
       const reader = mtl.make(one, two, three)
       reader.of(5)
-        .envMap((val, env) => env)
+        .readerMap((val, env) => env)
         .map((val) => {
           test.equal(val, 6)
           return val
