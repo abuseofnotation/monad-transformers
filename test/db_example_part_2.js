@@ -1,7 +1,11 @@
 const mtl = require("../lib/main.js")
+const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 
 /*
  */
+if ( global.v8debug ) {
+	global.v8debug.Debug.setBreakOnException()
+}
 const initData = () => {
   const data = {
     'users/john': {
@@ -87,7 +91,8 @@ const taskGetResourceFrom = (type) =>
 const mGetResourceFrom = (type) => 
   (id) => 
     m.of(suffix(type, id))
-    .readerChain((url, data) => {debugger; return m.fromContinuation(mGetResource(url, data)) })
+     //.readerChain((url, data) => {debugger; return m.fromContinuation(mGetResource(url, data)) })
+     .readerMap((url, data) => mGetResource(url, data)).chain(m.fromContinuation)
 
 const mGetUser = mGetResourceFrom('users')
 
@@ -110,7 +115,7 @@ const mGetUser = mGetResourceFrom('users')
  * For example here is a monad constructor that we can use for this tutorial:
  */
 
-const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
+//const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 
 /*
  * We include just the monads we need in it. And we can customize it however we like.
@@ -133,7 +138,11 @@ const processResource = (type, resourceId, f) =>
     .tap(mUpdateResourceTo(type))
 
 
-exports.mGetResource = (test) => 
-  mGetUser('john').run((result) => {
+exports.mGetResource = (test) => {
     debugger
-  }, {environment:initData()})
+    mGetUser('john')
+    .run((result) => {
+      test.done()
+    }, {environment:initData()})
+  }
+
