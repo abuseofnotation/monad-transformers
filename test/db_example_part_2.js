@@ -1,5 +1,4 @@
 const mtl = require("../lib/main.js")
-const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 
 /*
  */
@@ -63,7 +62,7 @@ const mGetResource = (url, data) => data.getResource.bind(null, url)
  * However, this breaks our workflow a bit. In the previous version of the tutorial we had this beautiful
  * `getResourceFrom` function that was quite handy:
  */
-const getResourceFrom = (type) => (id) => 
+const oldGetResourceFrom = (type) => (id) => 
     m.of(suffix(type, id))
     .tellMap((url) => `Retrieving ${url}... `) 
     .cont(mGetResource)
@@ -71,13 +70,16 @@ const getResourceFrom = (type) => (id) =>
  * Now, because this function calls `mGetResource`, it would also have to accept a dataSource and our whole code would 
  * start smelling bad. Unless there is a transformation that can handle this for us. 
  *
- * And as you might suspect, there
- * actually is one.
+ * And as you might suspect, there actually is one.   
  *
- * In order to use it, let's first refactor our code a bit:
+ * The Reader monad transformation is the evil twin of the Writer monad transformation.
+ * It gives us access to a immutable datastructure sometimes called 'environment' for storing all kinds of configurations.
+ * throughout our computation without bothering to pass it around.
+ *
+ * In order to use the Reader monad transformer , let's first refactor our code a bit:
  */
 
-const taskGetResourceFrom = (type) => 
+const oldGetResourceFrom2 = (type) => 
   (id) => 
     m.of(suffix(type, id))
     .chain((url) => m.fromContinuation(mGetResource(url)))
@@ -85,23 +87,36 @@ const taskGetResourceFrom = (type) =>
  * Remember this? This is the first version of the function that does not use the `cont` helper. Or it is close to it anyways -
  * this one uses another helper - the `fromContinuation` constructor).
  *
- * And this is the version that we will be using:
+ * We desugared our function in order to combine it with another helper - the -`loadEnvironment` helper.
+ * 
  */
 
 const mGetResourceFrom = (type) => 
   (id) => 
+      m.loadEnvironment().chain((environment) =>
+        m.fromContinuation(mGetResource(suffix(type, id), environment)))
+
+/* This is how it look look like. One way it can be written, that is.
+ * I will give one more variant:
+ */
+
+const newGetResourceFrom = (type) => 
+  (id) => 
     m.of(suffix(type, id))
-     //.readerChain((url, data) => {debugger; return m.fromContinuation(mGetResource(url, data)) })
-     .readerMap((url, data) => mGetResource(url, data)).chain(m.fromContinuation)
+    .map(mGetResource)
+    .chain(m.fromContinuation)
+
+const mmmGetResourceFrom = (type) => 
+  (id) => 
+    m.of(suffix(type, id))
+    .readerMap(mGetResource)
+    .chain(m.fromContinuation)
 
 const mGetUser = mGetResourceFrom('users')
 
 /*
  * So you see that we are not using `chain` anymore. Instead we are using `readerChain` - a helper function coming from the 
- * Reader monad transformation. The Reader monad transformation is the evil twin of the Writer monad transformation.
- * It gives us access to a immutable environment that we can use.
- * throughout our computation without bothering to pass it around.
- *
+ * Reader monad transformation. 
  * ## Monad transformers and the transformer stack
  *
  * That is all good, you might say, but why do we have to take a step back in order to use it? Why can't we still use our helper.
@@ -115,6 +130,7 @@ const mGetUser = mGetResourceFrom('users')
  * For example here is a monad constructor that we can use for this tutorial:
  */
 
+const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 //const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 
 /*
@@ -139,9 +155,9 @@ const processResource = (type, resourceId, f) =>
 
 
 exports.mGetResource = (test) => {
-    debugger
     mGetUser('john')
     .run((result) => {
+      test.equal(result.taskSuccess.maybeVal[0].occupation, "developer")
       test.done()
     }, {environment:initData()})
   }
