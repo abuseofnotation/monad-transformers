@@ -129,9 +129,8 @@ exports.mGetResource = (test) => {
 const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 
 /*
- * We include just the monads we need in it. And we can customize it however we like.
- *
- * And if you really want to use a given helper it is not hard to define it in terms of the other helpers.
+ * We include just the monads we need in it. And we can customize it however we like.And if you really want to use a 
+ * given helper it is not hard to define it in terms of the other helpers.
  * Here is, for example, a function for chaining computations that use the environment (remember: `chain` 
  * and `of` are key, everything else can be defined in terms of them)
  * 
@@ -143,10 +142,9 @@ m.prototype.readerCont = function (f) {
 }
 
 /*
- * Easy right? Well that is the point of the wrapper object - to serve as a container in which you can
- * define your functions.
- *
- * Once we have this one we can totally abstract away our environment in the `getResourceFrom` function:
+ * Easy right? Well that is the point of the wrapper object - to serve as a container for all kinds of 
+ * monad transformer functions. And once we have this one we can totally abstract away our environment in the 
+ * `getResourceFrom` function:
  */
 
 const helperGetResourceFrom = (type) => (id) => 
@@ -154,7 +152,7 @@ const helperGetResourceFrom = (type) => (id) =>
     .readerCont(mGetResource)
 
 /*
- * Verify that this works before moving on:
+ * Let's verify that this works before moving on:
  */
 exports.helperGetResourceFrom  = (test) => {
     helperGetResourceFrom('users')('john')
@@ -168,21 +166,23 @@ exports.helperGetResourceFrom  = (test) => {
  *
  * ## Posting resources
  * 
- * How would a primitive function for posting resources looks like? Like this, possibly:
+ * How would a primitive function for posting resources looks like? Here is one way 
  */
 const postResourceTo = (type, id) => 
   (mResource) => mResource
     .readerCont((resource, data) => 
         data.postResource(suffix(url, id), resource))
-/*
+/* 
+ * It is pretty easy to conceive once you understand its `get` counterpart.
+ *
  * ### Interlude: Currying
  *
- * It seems pretty easy to concieve, with one exception: would we use a function that receives a resource type
- * and an id, and returns a resource modifier function. 
+ * Actually there is one more think worth thinking about.
+ * Do we need a function that receives a resource type and an id, and returns a resource modifier function. 
  *
- * Or do we want one that receives just the type and returns a function that accepts both an ID and a new version of a
- * resource? If you find yourself asking these questions, just wrap the function in the `curry` constructor and it will
- * make it work both ways.
+ * Or do we actually want one that receives just the type and returns a function that accepts both an ID and a new version of a
+ * resource? If you find yourself asking these questions, the answer is just to wrap the function in the `curry` constructor
+ * and it will work both ways.
  *
  * Just remember to order your arguments from the one you know about to the one that you don't:
  */
@@ -197,26 +197,49 @@ const mPostResourceTo = mtl.curry((type, id, mResource) =>
  * For example let's write a function that modifies a resouce:
  */
 
-const modifyResource = (type, id, f) => 
+const modifyResource = mtl.curry((type, f, id) => 
     mGetResourceFrom(type)(id)
     .map(f)
-    .chain(mPostResourceTo(type, id))
+    .chain(mPostResourceTo(type, id)))
   
 /*
- * This allows us to modify a resource using pure functions:
+ * Keeps getting easier and easier. This allows us to modify a resource using ordinary functions like:
  */
 const makeFarmer = (user) => { user.occupation = 'farmer'; return user}
+
+/*
+ * And the fact that is curried allows us to "breed" it into a thousand more-specific functions:
+ */
+const modifyUser = modifyResource('users')
+const mMakeFarmer = modifyUser(makeFarmer)
 
 /*
  * Beautiful. Let's test that:
  */
 exports.modify  = (test) => {
-  modifyResource('users', 'john', makeFarmer)
+   m.of('john').chain(mMakeFarmer)
     .run((result) => {
       test.deepEqual(result.taskSuccess.maybeVal[0],{name:"John", occupation:"farmer"})
       test.done()
     }, {environment:initData()})
-  
 }
+/* I think it works
+ * to be sure I want to retrieve it again, after I change it:
+ */
+exports.modifyAndGet  = (test) => {
+   m.of('john')
+     .chain(mMakeFarmer)
+     .chain((_)=> mGetResourceFrom('users')('john'))
+    .run((result) => {
+      test.deepEqual(result.taskSuccess.maybeVal[0],{name:"John", occupation:"farmer"})
+      test.done()
+    }, {environment:initData()})
+}
+/*
+ * With `.chain((_)=>` we effectively ignore the value that we have so far.
+ * This may seem weird, since we never do it with promises, for example, but here it makes sense.
+ * There even is a shortcut method for this - `andThen`.
+ */
 
-/* * Interlude: equational reasoning */
+/* ###Interlude: equational reasoning
+ */
