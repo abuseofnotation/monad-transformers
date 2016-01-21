@@ -49,7 +49,7 @@ const initData = () => {
 const data = initData()
 const mGetResource = (url) => data.getResource.bind(null, url)
 
-const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
+const suffix = (suffix, str) => suffix + '/' + str
 
 /*
  * - `mGetResource` is just a curried version of the function that we defined in the mock. 
@@ -96,7 +96,7 @@ const getResourceFrom = (type) => (id) =>
     .tellMap((url) => `Retrieving ${url}... `) 
     .cont(mGetResource)
 /*
- * You noticed that we added one more line? That is cool but it is irrelevant for now.
+ * You noticed that we added one more line? Good for you, but ignore it for now.
  *
  * I would like to make several remarks, on this version of the function:
  *
@@ -241,43 +241,6 @@ exports.dbLog = (test) =>
   getPersonInfo('john')
     .run((result) => {
       test.equal(result.taskSuccess.maybeVal[1], 'Retrieving users/john... Retrieving occupations/developer... ')
-      test.done()
-    }) 
-
-/*
- * ## More Writer
- *
- * Logging is not the only use of the Writer monad. As a matter of fact, we can store
- * our whole result in the Writer value. 
- * This would free us from the burden of having to build the result explicitly.
- *
- * The following shows a new version of our program that uses the Writer monad to retrieve results about two people.
- */
-
-const wGetResourceFrom = (type) => 
-  (mResourceId) => mResourceId
-    .map(suffix(type))
-    .cont(mGetResource)
-
-const wGetOccupationInfo = (mPersonalInfo) =>
-  mPersonalInfo.maybeGet('occupation')
-    .tap(wGetResourceFrom('occupations'))
-
-const writePersonInfo = (name) =>
-  m.of(name)
-    .map(suffix('users'))
-    .cont(mGetResource)
-    .tellMap((userInfo) => userInfo.name)
-    .tell(" ")
-    .tap(wGetOccupationInfo)
-    .tellMap((occupationInfo => occupationInfo.description))
-
-exports.dbWriter = (test) =>
-  writePersonInfo('john')
-    .tell(", ")
-    .kleisi(writePersonInfo('jim'))
-    .run((result) => {
-      test.equal(result.taskSuccess.maybeVal[1], 'John writes code, Jim feeds the animals')
       test.done()
     }) 
 
