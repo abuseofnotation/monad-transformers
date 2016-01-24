@@ -21,6 +21,7 @@
   "homepage": "https://github.com/boris-marinov/monad-transformers#readme",
   "dependencies": {
     "data.task": "^3.0.0",
+    "immutable": "^3.7.6",
     "object-assign": "^4.0.1"
   },
   "devDependencies": {

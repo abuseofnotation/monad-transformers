@@ -15,7 +15,7 @@
  */
 
 var val = m.of()
-const onUserAction (a) => ( val = val.chain(processAction(a).run()) 
+const onUserAction (a) => (val = val.chain(processAction(a)).run()) 
 
 /*
  * And `processAction` will be the rest of our app.
