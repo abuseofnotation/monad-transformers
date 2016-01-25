@@ -1,6 +1,9 @@
 var mtl = require('../lib/main')
 var sinon = require('sinon')
 var permutations = require('./permutations')
+if ( global.v8debug ) {
+        global.v8debug.Debug.setBreakOnException()
+}
 
 //TODO add err handling to all types
 exports.maybe = permutations(a => (a.indexOf(mtl.data.maybe) !== -1), (one, two, three) => {

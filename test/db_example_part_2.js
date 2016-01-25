@@ -105,7 +105,7 @@ const mGetResourceFrom = (type) =>
 exports.mGetResource = (test) => {
     mGetResourceFrom('users')('john')
     .run((result) => {
-      test.equal(result.taskSuccess.maybeVal[0].occupation, "developer")
+      test.equal(result.taskSuccess.value.value.occupation, "developer")
       test.done()
     }, {environment:initData()})
   }
@@ -156,7 +156,7 @@ const helperGetResourceFrom = (type) => (id) =>
 exports.helperGetResourceFrom  = (test) => {
     helperGetResourceFrom('users')('john')
     .run((result) => {
-      test.deepEqual(result.taskSuccess.maybeVal[0],{name:"John", occupation:"developer"})
+      test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"developer"})
       test.done()
     }, {environment:initData()})
   }
@@ -218,7 +218,7 @@ const mMakeFarmer = modifyUser(makeFarmer)
 exports.modify  = (test) => {
    m.of('john').chain(mMakeFarmer)
     .run((result) => {
-      test.deepEqual(result.taskSuccess.maybeVal[0],{name:"John", occupation:"farmer"})
+      test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"farmer"})
       test.done()
     }, {environment:initData()})
 }
@@ -230,7 +230,7 @@ exports.modifyAndGet  = (test) => {
      .chain(mMakeFarmer)
      .chain((_)=> mGetResourceFrom('users')('john'))
     .run((result) => {
-      test.deepEqual(result.taskSuccess.maybeVal[0],{name:"John", occupation:"farmer"})
+      test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"farmer"})
       test.done()
     }, {environment:initData()})
 }

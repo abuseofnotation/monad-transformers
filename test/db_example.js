@@ -182,11 +182,11 @@ const getPersonInfo = (name) =>
 exports.dbSuccess = (test) =>
   getPersonInfo('john')
     .run((result) => {
-      test.equal(result.taskSuccess.maybeVal[0][0], 'John writes code')
+      test.equal(result.taskSuccess.value.value.value, 'John writes code')
       test.done()
     }) 
 /* 
- * This works fine but I better explain the `taskSuccess.maybeVal[0][0]` part.
+ * This works fine but I better explain the `taskSuccess.value.value.value` part.
  *
  * Each monad transformation which we use (or don't) defines its own object namespace. In that namespace
  * we can see its value, which is actually the namespace of another monad. So effectively this means that 
@@ -222,7 +222,7 @@ exports.dbError = (test) =>
 exports.dbMaybe = (test) =>
   getPersonInfo('max')
     .run((result) => {
-      test.equal(result.taskSuccess.maybeVal, undefined)
+      test.equal(result.taskSuccess.value, undefined)
       test.done()
     }) 
 
@@ -240,7 +240,7 @@ exports.dbMaybe = (test) =>
 exports.dbLog = (test) =>
   getPersonInfo('john')
     .run((result) => {
-      test.equal(result.taskSuccess.maybeVal[1], 'Retrieving users/john... Retrieving occupations/developer... ')
+      test.equal(result.taskSuccess.value.writer, 'Retrieving users/john... Retrieving occupations/developer... ')
       test.done()
     }) 
 

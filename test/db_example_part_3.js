@@ -4,20 +4,28 @@
  */
 
 /*
- * ## Interlude: an architecture for dynamic applications.
+ * Most of the applications that we write are dynamic - they constantly receive input and output.
+ * 
+ * Such applications cannot be purely functional, that is they must feature an imperative core that takes care 
+ * of rendering and interactivity. 
  *
- * Dynamic applications (ones that constantly receive input and output) can be modelled using the notions of 
- * an event stream (or an observable object). 
+ * Our job is to model the application such that this core is trivial. Monads are NOT used to 
+ * model the imperative part - they are used to model the rest of the application.
  *
  * Assume that we have a function that get's called for every user action (a kind of universal event handler):
- *
- * What we can do is to write the following in this function:
+ * 
+ * Then we can use the following as out imperative core:
  */
 
-var val = m.of()
-const onUserAction (a) => (val = val.chain(processAction(a)).run()) 
+const mtl = require("../lib/main.js")
+const m = mtl.advanced
 
-/*
- * And `processAction` will be the rest of our app.
- */
+var appState = m.of()
+const onUserAction = (a) => {
+  appState = appState.chain(processAction(a))
+  document.innerHTML = ''
+  document.appendChild = render(appState)
+
+}
+
 
