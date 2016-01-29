@@ -1,4 +1,7 @@
-/* # Example 1 - Retrieving REST Resources
+/* 
+ * # Example Part 1 - Retrieving REST Resources
+ * 
+ * _Using the monad stack. Using the Task monad, the Maybe monad and the Writer monad._
  *
  * The following examples show performing async database operations using the mtl library.
  *

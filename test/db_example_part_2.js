@@ -1,7 +1,9 @@
-const mtl = require("../lib/main.js")
 /* 
-/* # Example Part 2 - Modifying REST Resources
+/* # Example Part 2 - Parametrizing our data source / Modifying REST Resources
+ *
+ * _Using the Reader and the State monad. Currying._
  */
+const mtl = require("../lib/main.js")
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
