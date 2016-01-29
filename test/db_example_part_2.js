@@ -226,7 +226,7 @@ exports.modify  = (test) => {
     }, {environment:initData()})
 }
 /* I think it works
- * to be sure I want to retrieve it again, after I change it:
+ * to be sure I want to retrieve the resource again, after I change it:
  */
 exports.modifyAndGet  = (test) => {
    m.of('john')
@@ -243,5 +243,9 @@ exports.modifyAndGet  = (test) => {
  * There even is a shortcut method for this - `andThen`.
  */
 
-/* ###Interlude: equational reasoning
- */
+exports.exports = (test) =>
+  test ? test.done() : {
+    initData: initData,
+    mGetResourceFrom: mGetResourceFrom,
+    mPostResourceTo: mPostResourceTo
+  }

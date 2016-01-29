@@ -1,15 +1,16 @@
 /* 
- * # Example Part 3 - Rendering data on screen
+ * # Example Part 3 - Side effects
  *
  * _Creating custom monads._
  *
- * The following examples show performing async database operations using the mtl library.
- *
- * We will be mocking a simple simple REST API with a set of resources defined in the `data`
- * object and a function that simulates retriving a resource asynchronously - `getResource`. 
+ * The monadic functions that we used so far were really cool and all, but they were just functions, albeit
+ * asynchronous. They only received input at the beginning and did not place any output until the end.
+ * Technically they were not pure (because they accessed and modified external resources), but they were
+ * pretty close.
  * 
- * Our task will be related to retrieving info about the users and their occupations and handling different kinds
- * of errors.
+ * Now we are going to do something different - a procedure that is in constant connection with the outside
+ * world. We are going to handle IO.
+ * 
  */
 const mtl = require("../lib/main.js")
 const m = mtl.advanced
