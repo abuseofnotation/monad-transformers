@@ -1,5 +1,6 @@
 const mtl = require("../lib/main.js")
-/*
+/* 
+/* # Example Part 2 - Modifying REST Resources
  */
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()

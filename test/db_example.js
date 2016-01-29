@@ -1,4 +1,4 @@
-/* # Database Example
+/* # Example 1 - Retrieving REST Resources
  *
  * The following examples show performing async database operations using the mtl library.
  *
