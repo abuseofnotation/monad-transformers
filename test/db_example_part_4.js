@@ -27,7 +27,7 @@ if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
 
-const m = mtl.make(mtl.data.maybe, mtl.comp.state, react)
+const m = mtl.make(mtl.data.maybe, mtl.comp.state)
 
 const immutable = require('immutable')
 
@@ -50,7 +50,7 @@ const actions = {
   toggle: (i) => (val) => m.of(toggle(i, val))
 }
 
-exports.todo = {
+const exportstodo = {
   one (test) {
     val
       .chain(actions.type('foo'))
