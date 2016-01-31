@@ -71,21 +71,21 @@ const reader = {
  * These are the ones we actually use.
  *
  * Let's see how far can we go by keeping the standard functionality as-is and only define a new set
- * of helpers, which are more DOM-friendly.
+ * of helpers, which are more io-friendly.
  *
  * So let's begin by copying the reader monad:
  */
-var dom = reader
+var io = reader
 /*
  * Change the name, so we don't confuse the two monads while debugging:
  */
-dom.name = 'StdinStdout'
+io.name = 'StdinStdout'
 /*
  * And lastly, we are also going to patch the `run` method so our new monad uses the `process`
  * global variable as its environment. We are leaving the possibility to mock our `process`
  * object if we want to.
  */
-dom.run = function run (f, reader) {
+io.run = function run (f, reader) {
   return f(reader(this.process || global.process))
 }
 /*
@@ -94,8 +94,8 @@ dom.run = function run (f, reader) {
  * not OK in the current case, because we prefer to keep our side effects inside the monad's
  * implementation. So let's just remove them and start from scratch:
  */
-delete dom.readerMap
-delete dom.loadEnvironment
+delete io.readerMap
+delete io.loadEnvironment
 /* 
  * If we wanted to keep them, we would have to change their names, again to avoid conflicts
  * with the original `Reader`.
@@ -107,9 +107,9 @@ delete dom.loadEnvironment
  * The writing part is trivial.
  *
  */
-dom.write = function (f, val) {
+io.write = function (f, val) {
   return (process) => {
-    process.stdout.write(f(val))//Perform side effect
+    process.stdout.write(f(val)+'\n')//Perform side effect
     return this.outer.of(val)//Return val
   }
 }
@@ -121,22 +121,24 @@ dom.write = function (f, val) {
  *
  * It will look like this:
  */
-dom.promptFor = function (f,val) {
+io.promptFor = function (f,val) {
   return (process) => {
     process.stdout.write(f(val))
     return this.outer.of((error, success) => {
-      process.stdin.resume()
-      process.stdin.on('data', function (text) {
+      const processData = (text) => {
+        process.stdin.removeListener('data', processData)
         process.stdin.pause()
-        success(util.inspect(text))
-      })
+        success(util.inspect(text).slice(0,-3).slice(1))
+      }
+      process.stdin.resume()
+      process.stdin.on('data',processData)
     })
   }
 }
 /* 
  * And it can be used like this:
  */
-const m = mtl.make(mtl.base.task, dom)
+const m = mtl.make(mtl.base.task, io)
 
 const getUsername = () =>
   m.of()
@@ -157,37 +159,61 @@ const getUsername = () =>
  * and can trigger all previous (or "outer") transformations.
  *
  * The ordering in this library is left to right, so if we 
- * have a stack like `mtl.base.task, dom` then we can use the `Task` monad transformer
- * in the implementation of the `dom` monad transformer.
+ * have a stack like `mtl.base.task, io` then we can use the `Task` monad transformer
+ * in the implementation of the `io` monad transformer.
  *
- * Let's redefine the `promptFor` method so it creates a Task directly:
+ * Let's try it. 
+ * We have to redefine the `promptFor` method so it creates a Task directly
+ * (all we have to do is change the `of` method to `fromContinuation`):
  */
-dom.promptFor = function (f,val) {
+io.promptFor = function (f,val) {
   return (process) => {
     process.stdout.write(f(val))
     return this.outer.fromContinuation((error, success) => {
-      process.stdin.resume()
-      process.stdin.on('data', function (text) {
+      const processData = (text) => {
+        process.stdin.removeListener('data', processData)
         process.stdin.pause()
-        success(util.inspect(text))
-      })
+        success(util.inspect(text).slice(0,-3).slice(1))
+      }
+      process.stdin.resume()
+      process.stdin.on('data',processData)
     })
   }
 }
-const mNew = mtl.make(mtl.base.task, dom)
+/*
+ * And we have to make sure that there is a Task monad transformer to the left
+ * of the monad that uses it:
+ */
+
+const mNew = mtl.make(mtl.base.task, io)
+
+/*
+ * Then the function can look like it is supposed to look:
+ */
 const getUsernameNew = () =>
   mNew.of()
     .promptFor(()=> 'Username: ')
     .write((username) => `Your username is "${username}"`)
 
-getUsernameNew().run()
+/*
+ * Because we keep the side effects strictly inside the monad we still can chain
+ * the IO-bound functions in the same way as pure ones:
+ */
+const getUsernamePass = () =>
+  mNew.of()
+    .promptFor(()=> 'Username: ')
+    .write((username) => `Your username is "${username}"`)
+    .chain((username) => 
+        mNew.of(username)
+          .promptFor((username)=> `Password for "${username}": `)
+          .write((password) => `Attempting connection for ${username}:${password}`))
 
+getUsernamePass().run()
 /*
  * What is also cool is that each new transformation "inherits" the methods of the 
- * previous transformations, which means that the dom transformation will work on any
+ * previous transformations, which means that the io transformation will work on any
  * arbitrary stack, as long as it includes the `Task` transformer.
  *
  * For example let's include some transformations that will enable us to run some of
  * our previous examples:
- *
  */
