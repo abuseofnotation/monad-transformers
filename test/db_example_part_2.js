@@ -243,9 +243,3 @@ exports.modifyAndGet  = (test) => {
  * There even is a shortcut method for this - `andThen`.
  */
 
-exports.exports = (test) =>
-  test ? test.done() : {
-    initData: initData,
-    mGetResourceFrom: mGetResourceFrom,
-    mPostResourceTo: mPostResourceTo
-  }
