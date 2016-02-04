@@ -1,41 +1,14 @@
 /* 
 /* # Example Part 2 - Parametrizing our data source / Modifying REST Resources
  *
- * _Using the Reader and the State monad. Currying._
+ * _Using the Reader monad._
  */
 const mtl = require("../lib/main.js")
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
-const initData = () => {
-  const data = {
-    'users/john': {
-      name:'John',
-      occupation: 'developer'
-    },
-    'users/max': {
-      name: 'Max' //Has no occupation
-    },
-    'users/jim': {
-      name:'Jim',
-      occupation: 'farmer'
-    },
-    'occupations/developer': {
-      description: 'writes code'
-    },
-    'occupations/farmer': {
-      description: 'feeds the animals'
-    }
-  }
-  return {
-    getResource (url, error, success) {
-      setTimeout(() => data[url]!== undefined ? success(data[url]) : error({error:`Invalid URL - ${url}`}), 10)
-    },
-    postResource (url, value, error, success) {
-      setTimeout(() => { data[url] = value; success(value) }, 10)
-    }
-  }
-}
+const initData = require('./db_example_part_1.js').initData
+
 const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
 
 /*
@@ -83,9 +56,8 @@ const oldGetResourceFrom = (type) => (id) =>
  * In order to use the Reader monad transformer , let's first refactor our code a bit:
  */
 
-const oldGetResourceFrom2 = (type) => 
-  (id) => 
-    m.of(suffix(type, id))
+const oldGetResourceFrom2 = (type) => (id) => 
+  m.of(suffix(type, id))
     .chain((url) => m.fromContinuation(mGetResource(url)))
 /*
  * Remember this? This is the first version of the function that does not use the `cont` helper. Or it is close to it anyways -
@@ -94,10 +66,9 @@ const oldGetResourceFrom2 = (type) =>
  * We desugared our function in order to combine it with another helper - `loadEnvironment`.
  */
 
-const mGetResourceFrom = (type) => 
-  (id) => 
-      m.loadEnvironment().chain((environment) =>
-        m.fromContinuation(mGetResource(suffix(type, id), environment)))
+const mGetResourceFrom = (type) => (id) => 
+  m.loadEnvironment().chain((environment) =>
+    m.fromContinuation(mGetResource(suffix(type, id), environment)))
 
 /*
  * So that is the formula for using the Reader: we use the environment whenever we need it.
@@ -105,7 +76,8 @@ const mGetResourceFrom = (type) =>
  * In that way we can run it against the data that we defined earlier or any other.
  */
 
-exports.mGetResource = (test) => {
+exports.test = {}
+exports.test.mGetResource = (test) => {
     mGetResourceFrom('users')('john')
     .run((result) => {
       test.equal(result.taskSuccess.value.value.occupation, "developer")
@@ -131,11 +103,10 @@ exports.mGetResource = (test) => {
 const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader)
 
 /*
- * We include just the monads we need in it. And we can customize it however we like.And if you really want to use a 
- * given helper it is not hard to define it in terms of the other helpers.
+ * We include just the monads we need in it. And we can customize it however we like.
+ * If you really want to use a given helper it is not hard to define it in terms of the other helpers.
  * Here is, for example, a function for chaining computations that use the environment (remember: `chain` 
  * and `of` are key, everything else can be defined in terms of them)
- * 
  */
 m.prototype.readerCont = function (f) {
     return this.chain((val) => 
@@ -156,24 +127,22 @@ const helperGetResourceFrom = (type) => (id) =>
 /*
  * Let's verify that this works before moving on:
  */
-exports.helperGetResourceFrom  = (test) => {
-    helperGetResourceFrom('users')('john')
-    .run((result) => {
-      test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"developer"})
-      test.done()
-    }, {environment:initData()})
-  }
+
+exports.test.helperGetResourceFrom = (test) => {
+  helperGetResourceFrom('users')('john')
+  .run((result) => {
+    test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"developer"})
+    test.done()
+  }, {environment:initData()})
+}
 
 /*
- *
  * ## Posting resources
  * 
  * How would a primitive function for posting resources looks like? Here is one way 
  */
-const postResourceTo = (type, id) => 
-  (mResource) => mResource
-    .readerCont((resource, data) => 
-        data.postResource(suffix(url, id), resource))
+const postResourceTo = (type, id) => (resource) => m.of(resource)
+    .readerCont((resource, data) => data.postResource(suffix(url, id), resource))
 /* 
  * It is pretty easy to conceive once you understand its `get` counterpart.
  *
@@ -189,8 +158,8 @@ const postResourceTo = (type, id) =>
  * Just remember to order your arguments from the one you know about to the one that you don't:
  */
 
-const mPostResourceTo = mtl.curry((type, id, mResource) => 
-    m.of(mResource).readerCont((resource, data) => 
+const mPostResourceTo = mtl.curry((type, id, resource) => 
+    m.of(resource).readerCont((resource, data) => 
         data.postResource.bind(null, suffix(type, id), resource))) 
 
 /*
@@ -218,7 +187,7 @@ const mMakeFarmer = modifyUser(makeFarmer)
 /*
  * Beautiful. Let's test that:
  */
-exports.modify  = (test) => {
+exports.test.modify  = (test) => {
    m.of('john').chain(mMakeFarmer)
     .run((result) => {
       test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"farmer"})
@@ -228,7 +197,7 @@ exports.modify  = (test) => {
 /* I think it works
  * to be sure I want to retrieve the resource again, after I change it:
  */
-exports.modifyAndGet  = (test) => {
+exports.test.modifyAndGet  = (test) => {
    m.of('john')
      .chain(mMakeFarmer)
      .chain((_)=> mGetResourceFrom('users')('john'))

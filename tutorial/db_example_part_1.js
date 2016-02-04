@@ -181,13 +181,12 @@ const getPersonInfo = (name) =>
  * a monad which contains our value, so we will want to take the value out of the monad. We do this by using 
  * the `run` function which accepts a normal callback:
  */
-
-exports.dbSuccess = (test) =>
-  getPersonInfo('john')
-    .run((result) => {
-      test.equal(result.taskSuccess.value.value.value, 'John writes code')
-      test.done()
-    }) 
+exports.test = {}
+exports.test.dbSuccess = (test) => getPersonInfo('john')
+  .run((result) => {
+    test.equal(result.taskSuccess.value.value.value, 'John writes code')
+    test.done()
+  }) 
 /* 
  * This works fine but I better explain the `taskSuccess.value.value.value` part.
  *
@@ -204,12 +203,11 @@ exports.dbSuccess = (test) =>
  * by stopping the computation. You will find the error in the `taskError` property:
  */
 
-exports.dbError = (test) =>
-  getPersonInfo('UndefinedPerson')
-    .run((result) => {
-      test.equal(result.taskError.error, 'Invalid URL - users/UndefinedPerson') 
-      test.done()
-    }) 
+exports.test.dbError = (test) => getPersonInfo('UndefinedPerson')
+  .run((result) => {
+    test.equal(result.taskError.error, 'Invalid URL - users/UndefinedPerson') 
+    test.done()
+  }) 
 
 
 /* 
@@ -222,12 +220,11 @@ exports.dbError = (test) =>
  * For example here is what happens if we try to request a user that does not have an "occupation" field.
  *
  */
-exports.dbMaybe = (test) =>
-  getPersonInfo('max')
-    .run((result) => {
-      test.equal(result.taskSuccess.value, undefined)
-      test.done()
-    }) 
+exports.test.dbMaybe = (test) => getPersonInfo('max')
+  .run((result) => {
+    test.equal(result.taskSuccess.value, undefined)
+    test.done()
+  }) 
 
 
 /* ### Logging
@@ -240,10 +237,11 @@ exports.dbMaybe = (test) =>
  *
  * Sure enough, the log is part of the end result:
  */
-exports.dbLog = (test) =>
-  getPersonInfo('john')
-    .run((result) => {
-      test.equal(result.taskSuccess.value.writer, 'Retrieving users/john... Retrieving occupations/developer... ')
-      test.done()
-    }) 
+exports.test.dbLog = (test) => getPersonInfo('john')
+  .run((result) => {
+    test.equal(result.taskSuccess.value.writer, 'Retrieving users/john... Retrieving occupations/developer... ')
+    test.done()
+  }) 
 
+exports.initData = initData
+exports.suffix = suffix

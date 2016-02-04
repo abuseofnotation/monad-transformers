@@ -1,7 +1,7 @@
 /* 
  * # Example Part 3 - Side effects
  *
- * _Creating custom monads._
+ * _Creating and using custom monads._
  *
  * The monadic functions that we used so far were really cool and all, but they were just functions, albeit
  * asynchronous. They only received input at the beginning and did not place any output until the end.
@@ -28,6 +28,8 @@ if ( global.v8debug ) {
  * When doing IO we also have an environment on which we act on - the `process` object in node JS.
  * so it make sense to use something as `Reader` as a base, only this time we are going to modify it 
  * just a little bit, so it fits our needs exactly.
+ *
+ * ## Defining a IO monad transformer
  *
  * We are going to start with the original implementation of the `Reader` monad transformer which is
  * the following:
@@ -129,6 +131,11 @@ io.write = function (f, val) {
  *
  * It will look like this:
  */
+const unescapeString = (str) => {
+  const str2 = '"' + str.slice(0,-1).slice(1) +'"'
+  return JSON.parse(str2).trim()
+}
+
 io.promptFor = function (f,val) {
   return (process) => {
     process.stdout.write(f(val)) //prompt the user to write a value
@@ -136,8 +143,8 @@ io.promptFor = function (f,val) {
       const processData = (text) => {
         process.stdin.removeListener('data', processData)
         process.stdin.pause()
-        const input = util.inspect(text).slice(0, -1).slice(1).trim()//Remove quotes and newline char
-        success(input)
+        const input = util.inspect(text)
+        success(unescapeString(input))
       }
       process.stdin.resume()
       process.stdin.on('data',processData)
@@ -163,25 +170,22 @@ const getUsername = () =>
  * What you may not know is that they don't _have_ to be independent.
  *
  * Sure, defining the transformers separately from one another allows us to compose them however we wish
- * but sometimes we may want to define a transformer that is usable just in our user case and in our
- * specific stack. If we do that, we can freely make use of the other monads that we put in there.
+ * but sometimes we may want to define a transformer for a specific use case and on a 
+ * specific stack. If that is what we want, we can freely make use of the other monads that we have there:
+ *
+ * ###Interlude: Dependencies between monad transformers
  *
  * When several monad transformers are chained, their transformations are 
  * applied sequentially. This means that each transformation has access to 
  * and can trigger all previous (or "outer") transformations.
  *
- * The ordering in this library is left to right, so if we 
+ * Monads are specified in the `make` method from left to right - if we
  * have a stack composed of `mtl.base.task` and then `io` then we can use the `Task` monad transformer
  * in the implementation of the `io` monad transformer.
  *
- * Let's try it. 
- * We have to redefine the `promptFor` method so it creates a Task directly
+ * Let's try it. for example by redefining the `promptFor` method so it creates a Task directly
  * (all we have to do is change the `of` method to `fromContinuation`):
  */
-const unescapeString = (str) => {
-  const str2 = '"' + str.slice(0,-1).slice(1) +'"'
-  return JSON.parse(str2).trim()
-}
 io.promptFor = function (f,val) {
   return (process) => {
     process.stdout.write(f(val))
@@ -232,14 +236,23 @@ const getUsernamePass = () =>
  * You may already recognize this pattern - using a custom lambda to bind two or more values to constants
  * so we can use it for creating a third value (which in this case it is an IO action).
  *
+ * ## Creating a real application
+ *
  * What is cool when building dependencies as monad transformers is that each new transformation "inherits" 
  * the methods of the previous transformations, which means that the `IO` transformation will work on any
- * arbitrary stack, as long as it includes the `Task` transformer.
+ * arbitrary stack, as long as it includes the `Task` transformer, no matter how many other transformations
+ * there are.
  *
- * For example let's put some of the functions from our previous examples in the game:
+ * Let's for example define a stack which contains some transformers that we used in the previous examples:
+ *
  */
 
 const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader, io)
+
+/*
+ * This would allow us to run all functions that we defined early on:
+ */
+
 
 m.prototype.readerCont = function (f) {
     return this.chain((val) => 
@@ -262,6 +275,8 @@ const mPostResourceTo = mtl.curry((type, id, mResource) =>
 /*
  * Let's make a command-line application for retrieving and modifying resources:
  */
+
+
 const initData = () => {
   const data = {
     'users/john': {
@@ -293,8 +308,8 @@ const initData = () => {
 }
 const displayResource = (type) => (id) => 
   mGetResourceFrom(type)(id)
-  .write(()=> `Displaying info for "${id}"`)
-  .write((resource) => JSON.stringify(resource, null, 4))
+    .write(()=> `Displaying info for "${id}"`)
+    .write((resource) => JSON.stringify(resource, null, 4))
 
 const promptForResource = (type) => 
   m.of(type).promptFor((type)=> `${type} ID:`)
@@ -315,12 +330,11 @@ const set = mtl.curry((obj, key, value) => {
 const modifyOccupation = 
   promptForResource('users')
     .chain((userId) => mGetResourceFrom('users')(userId)
-      .chain((userInfo) => 
-        m.of(userInfo)
-          .promptFor((userInfo) => `${userInfo.name} is currently ${userInfo.occupation}. Choose another occupation:`)
-          .map(set(userInfo, 'occupation'))
-          .chain(mPostResourceTo('users', userId))
-          .chain(start)))
+      .chain((userInfo) => m.of(userInfo)
+        .promptFor((userInfo) => `${userInfo.name} is currently ${userInfo.occupation}. Choose another occupation:`)
+        .map(set(userInfo, 'occupation'))
+        .chain(mPostResourceTo('users', userId))
+        .chain(start)))
 
 const items = {
   'Get Users': promptAndDisplayResource('users'),
@@ -331,13 +345,9 @@ const items = {
 
 const getItemName = (items) => 
   m.of(items)
-  .write(()=> 'Available Actions')
-  .write((items)=> items.map((item, i) => ( `[${i}] - ${item}`)).join('\n'))
-  .promptFor(()=> 'Action:')
-  .chain((index)=> 
-     m.of(items).maybeGet(parseInt(index)))
-      
+    .write(()=> 'Available Actions')
+    .write((items)=> items.map((item, i) => ( `[${i + 1}] - ${item}`)).join('\n'))
+    .promptFor(()=> 'Action:')
+    .chain((index)=> m.of(items).maybeGet(parseInt(index - 1)))
 
-
-  
-start().run(result=>(console.log(result)), {environment:initData()})
+start().run(result => console.log(result), {environment:initData()})

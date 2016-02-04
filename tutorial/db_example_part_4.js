@@ -1,6 +1,6 @@
 
 /* 
- * # Example Part 4 - Dynamic apps
+ * # Example Part 4 - UI
  *
  * _Creating custom monads 2. Dynamic IO_
  *
