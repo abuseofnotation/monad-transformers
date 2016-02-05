@@ -236,110 +236,92 @@ const getUsernamePass = () =>
  * You may already recognize this pattern - using a custom lambda to bind two or more values to constants
  * so we can use it for creating a third value (which in this case it is an IO action).
  *
- * ## Creating a real application
+ * ## Our first "real" application
  *
  * What is cool when building dependencies as monad transformers is that each new transformation "inherits" 
  * the methods of the previous transformations, which means that the `IO` transformation will work on any
  * arbitrary stack, as long as it includes the `Task` transformer, no matter how many other transformations
  * there are.
  *
- * Let's for example define a stack which contains some transformers that we used in the previous examples:
+ * Let's for example define a stack which contains the transformers that we used in the previous examples:
  *
  */
 
 const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader, io)
 
 /*
- * This would allow us to run all functions that we defined early on:
+ * This would allow us to run all functions that we defined early on. Remember that
+ * we parametrized the `m` argument, so they don't rely on explicit stack? Because of this
+ * now we can use them along with the new monad:
  */
 
+const previous = require('./db_example_part_2.js')
+const initData = previous.initData
+const mGetResourceFrom = previous.mGetResourceFrom
+const mPostResourceTo = previous.mPostResourceTo
 
-m.prototype.readerCont = function (f) {
-    return this.chain((val) => 
-      m.loadEnvironment()
-      .cont((env) => f(val, env)))
-}
-const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
-
-const mGetResource = (url, data) => data.getResource.bind(null, url)
-
-const mGetResourceFrom = (type) => 
-  (id) => 
-      m.loadEnvironment().chain((environment) =>
-        m.fromContinuation(mGetResource(suffix(type, id), environment)))
-
-const mPostResourceTo = mtl.curry((type, id, mResource) => 
-    m.of(mResource).readerCont((resource, data) => 
-        data.postResource.bind(null, suffix(type, id), resource))) 
-
-/*
- * Let's make a command-line application for retrieving and modifying resources:
+/* 
+ * Let's finish this off by creating a command-line interface for retrieving and modifying our resources.
+ * 
+ * We will start by creating some general definitions that gradually move to more specific use cases.
+ * 
+ * ### Displaying resources
+ * 
+ * To display a resource, we must retrieve it and then write it in the screen.
  */
 
+prettyPrint = (obj) => JSON.stringify(obj, null, 4)
 
-const initData = () => {
-  const data = {
-    'users/john': {
-      name:'John',
-      occupation: 'developer'
-    },
-    'users/max': {
-      name: 'Max' //Has no occupation
-    },
-    'users/jim': {
-      name:'Jim',
-      occupation: 'farmer'
-    },
-    'occupations/developer': {
-      description: 'writes code'
-    },
-    'occupations/farmer': {
-      description: 'feeds the animals'
-    }
-  }
-  return {
-    getResource (url, error, success) {
-      setTimeout(() => data[url]!== undefined ? success(data[url]) : error({error:`Invalid URL - ${url}`}), 10)
-    },
-    postResource (url, value, error, success) {
-      setTimeout(() => { data[url] = value; success(value) }, 10)
-    }
-  }
-}
 const displayResource = (type) => (id) => 
-  mGetResourceFrom(type)(id)
+  mGetResourceFrom(type, id, m)
     .write(()=> `Displaying info for "${id}"`)
-    .write((resource) => JSON.stringify(resource, null, 4))
+    .write(prettyPrint) 
+
+/* 
+ * Normally in an application before requesting a resource we have to prompt the user for its ID:
+ */
 
 const promptForResource = (type) => 
   m.of(type).promptFor((type)=> `${type} ID:`)
-
-const start = () =>
-  getItemName(Object.keys(items))
-    .chain((itemName) => items[itemName])
-
+/*
+ * There is a simple way to combine these steps.
+ */
 const promptAndDisplayResource = (type) =>
-  promptForResource(type).chain(displayResource(type)).chain(start)
+  promptForResource(type).chain(displayResource(type))
 
+/*
+ * ### Modifying resources
+ *
+ * How do we modify a resource from our command-line app?
+ * 
+ */
 const set = mtl.curry((obj, key, value) => {
   const newObj = assign({}, obj)
   newObj[key] = value
   return newObj
 })
 
-const modifyOccupation = 
-  promptForResource('users')
-    .chain((userId) => mGetResourceFrom('users')(userId)
+const modifyResourceProperty = (type, property) => promptForResource(type).chain((id) => 
+    mGetResourceFrom(type, id, m)
       .chain((userInfo) => m.of(userInfo)
         .promptFor((userInfo) => `${userInfo.name} is currently ${userInfo.occupation}. Choose another occupation:`)
-        .map(set(userInfo, 'occupation'))
-        .chain(mPostResourceTo('users', userId))
-        .chain(start)))
+        .map(set(userInfo, property))
+        .chain(mPostResourceTo(type, id))))
+
+/*
+ * ### Putting it together
+ *
+ *
+ */
+
+const start = () =>
+  getItemName(Object.keys(items))
+    .chain((itemName) => items[itemName])
 
 const items = {
-  'Get Users': promptAndDisplayResource('users'),
-  'Get Occupations': promptAndDisplayResource('occupations'),
-  'Modify User occupation': modifyOccupation
+  'Get Users': promptAndDisplayResource('users').chain(start),
+  'Get Occupations': promptAndDisplayResource('occupations').chain(start),
+  'Modify User occupation': modifyResourceProperty('users', 'occupation').chain(start)
 }
 
 

@@ -66,7 +66,7 @@ const oldGetResourceFrom2 = (type) => (id) =>
  * We desugared our function in order to combine it with another helper - `loadEnvironment`.
  */
 
-const mGetResourceFrom = (type) => (id) => 
+const mGetResourceFrom = (type, id) => 
   m.loadEnvironment().chain((environment) =>
     m.fromContinuation(mGetResource(suffix(type, id), environment)))
 
@@ -78,7 +78,7 @@ const mGetResourceFrom = (type) => (id) =>
 
 exports.test = {}
 exports.test.mGetResource = (test) => {
-    mGetResourceFrom('users')('john')
+    mGetResourceFrom('users', 'john')
     .run((result) => {
       test.equal(result.taskSuccess.value.value.occupation, "developer")
       test.done()
@@ -141,8 +141,8 @@ exports.test.helperGetResourceFrom = (test) => {
  * 
  * How would a primitive function for posting resources looks like? Here is one way 
  */
-const postResourceTo = (type, id) => (resource) => m.of(resource)
-    .readerCont((resource, data) => data.postResource(suffix(url, id), resource))
+const postResourceTo = (type, id) => (resource) => m.loadEnvironment().chain((data) =>
+  m.fromContinuation(data.postResource.bind(null, suffix(type, id), resource))) 
 /* 
  * It is pretty easy to conceive once you understand its `get` counterpart.
  *
@@ -158,9 +158,8 @@ const postResourceTo = (type, id) => (resource) => m.of(resource)
  * Just remember to order your arguments from the one you know about to the one that you don't:
  */
 
-const mPostResourceTo = mtl.curry((type, id, resource) => 
-    m.of(resource).readerCont((resource, data) => 
-        data.postResource.bind(null, suffix(type, id), resource))) 
+const mPostResourceTo = mtl.curry((type, id, resource) => m.loadEnvironment().chain((data) =>
+  m.fromContinuation(data.postResource.bind(null, suffix(type, id), resource))))
 
 /*
  * After we have a functions for retrieving and posting a resource, we might combine them in many ways.
@@ -169,7 +168,7 @@ const mPostResourceTo = mtl.curry((type, id, resource) =>
  */
 
 const modifyResource = mtl.curry((type, f, id) => 
-    mGetResourceFrom(type)(id)
+    mGetResourceFrom(type, id)
     .map(f)
     .chain(mPostResourceTo(type, id)))
   
@@ -200,7 +199,7 @@ exports.test.modify  = (test) => {
 exports.test.modifyAndGet  = (test) => {
    m.of('john')
      .chain(mMakeFarmer)
-     .chain((_)=> mGetResourceFrom('users')('john'))
+     .chain((_)=> mGetResourceFrom('users', 'john'))
     .run((result) => {
       test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"farmer"})
       test.done()
@@ -212,3 +211,11 @@ exports.test.modifyAndGet  = (test) => {
  * There even is a shortcut method for this - `andThen`.
  */
 
+exports.initData = initData
+
+exports.mGetResourceFrom = mtl.curry((type, id, m) => 
+  m.loadEnvironment().chain((environment) =>
+    m.fromContinuation(mGetResource(suffix(type, id), environment))))
+
+exports.mPostResourceTo = mtl.curry((type, id, resource, m) => m.loadEnvironment().chain((data) =>
+  m.fromContinuation(data.postResource.bind(null, suffix(type, id), resource))))
