@@ -1,7 +1,9 @@
 /* 
- * # Example Part 3 - Side effects
+ * # Side effects
  *
- * _Creating and using custom monads._
+ * _This is part 3 from the `monad-transformers` tutorial. See also [part 1](p1.md) and [part 2](p2.md)._
+ *
+ * > Creating and using custom monads.
  *
  * The monadic functions that we used so far were really cool and all, but they were just functions, albeit
  * asynchronous. They only received input at the beginning and did not place any output until the end.
@@ -17,16 +19,17 @@ if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
 
-/* Now in the previous example we handled side effects using the "Reader" monad and 
+/* Now in the previous example we handled side effects using the `Reader` monad and 
  * aside from the fact that we were abusing it (the environment in `Reader` is supposed
  * to be immutable, and ours was mutable). This approach wasn't bad
  * at all - when calling the function we could specify what part of the environment it was permitted to 
  * touch. From inside the function we could regulate which parts of the code had access to 
- * the environment, for example functions we call using `map` cannot touch it (unless we loaded it 
+ * the environment - for example functions we call using `map` cannot touch it (unless we loaded it 
  * beforehand using `loadEnvironment`).
  * 
- * When doing IO we also have an environment on which we act on - the `process` object in nodeJS.
- * so it make sense to use something as `Reader` as a base, only this time we are going to modify it 
+ * When doing IO we also have an environment on which we act on (in this example it is the `process` object
+ * in nodeJS)
+ * so it make sense to use something as `Reader` as a base. Only this time we are going to modify it 
  * just a little bit, so it fits our needs exactly.
  *
  * ## Defining a IO monad transformer
@@ -39,7 +42,7 @@ if ( global.v8debug ) {
  *
  * 3. The effects are executed.
  *
- * That is what we are going to do here also. 
+ * That is what we are going to do here now.
  *
  * The first part is to define a monad transformer for handling IO.
  * We are going to start with the original implementation of the `Reader` monad transformer which is
@@ -77,7 +80,7 @@ const reader = {
 }
 
 /*
- * The core of the definition are a bunch of standard functions which define how to "wrap"
+ * The core of the definition are a bunch of [standard functions](../implementing-transformer.md) which define how to "wrap"
  * a plain normal values in a `Reader` function (`of` and `lift`),
  * how to `run` an already-created `Reader`, against a specific environment and most importantly, 
  * how to apply a function which takes a normal plain value and returns an instance of `Reader`
