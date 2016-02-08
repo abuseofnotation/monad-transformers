@@ -7,7 +7,10 @@ The package consists of the following components:
 The [object wrapper](wrapper.md), exposed via the `mtl.make` function, combines one or several monad  transformer definitions and mixes them into one  [Fantasy Land compliant](https://github.com/fantasyland/fantasy-land) monad. 
 
     const mtl = {}
-    mtl.make = require('./wrapper')
+    const createStack = require('./stack')
+    mtl.make = function () {
+      return createStack(Array.prototype.slice.call(arguments)).constructor
+    }
     
 ## Monad transformer definitions 
 
@@ -41,9 +44,15 @@ The library features five predefined monad stacks.
     mtl.statelist = mtl.make(mtl.data.list, mtl.data.maybe, mtl.data.writer, mtl.comp.state)
     
     mtl.advanced = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.state)
-    mtl.advanced.prototype.rejectedMap = function(fn) {
-      return mtl.advanced(() => this._value().rejectedMap(fn))
-    }
+    
+
+
+## Helpers Some helper functions that we want to keep handy: 
+
+    const helpers = require('./helpers')
+    mtl.curry = helpers.curry
+    mtl.compose = helpers.compose
+    
     module.exports = mtl
 
 

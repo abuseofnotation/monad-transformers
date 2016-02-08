@@ -60,28 +60,9 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
 
 ## Source 
 
-    const createStack = require('./stack')
     const assign = require('object-assign')
+    const helpers = require('./helpers')
     const idFunc = a => a
-    
-    // Checks if a given property is part of the general monad definition interface
-    const isReserverMonadKey = (key) => key !=='run' && key !== 'fold' && key !== 'name' && key !== 'map' && key !== 'of' && key !== 'chain' && key !== 'lift' && key !== 'value'
-    
-    //combines an array of async functions with signature into one functions.
-    // [ (callback, value) => () ] => (value) => ()
-    const asyncCompose = (functions, self) => functions.reduce((f, newF) => {
-      return (val) => newF.call(self, f, val)
-    })
-    
-    // Maps the values of a given obj excluding the reserved ones.
-    const monadMapVals = (funk, obj) => {
-      return Object.keys(obj)
-        .filter(isReserverMonadKey)
-        .reduce((newObj, key) => {
-          newObj[key] = funk(obj[key], obj)
-          return newObj
-        }, {})
-    }
     
     // Unwraps a wrapped value
     const unwrap = (val) => {
@@ -90,101 +71,96 @@ For more information, see the [Fantasy Land spec](https://github.com/fantasyland
     }
     
     // Wraps a value in a specified prototype
-    const wrapVal = (proto, val) => {
+    const wrap = (proto, val) => {
       var obj = Object.create(proto)
       obj._value = val
       return Object.freeze(obj)
     }
     
-    
-    module.exports = function make () {
-      // Initilize the stack component, that actually does most of the work
-      const stack = createStack(Array.prototype.slice.call(arguments))
-      
-      //Collect the default run functions
-      const runFunctions = stack.members.map((a)=>a.run)
-    
-      //Create a function that runs the monad stack with the specified callback
-      const makeRunner = (callback) => asyncCompose([callback].concat(runFunctions))
-    
-      const defaultFold = function (f, val){
-        (this.onValue || idFunc)(val)
-        return f(val)
-      }
-      //Collect the default fold functions
-      const foldFunctions = stack.members.map((a)=>a.fold).concat([defaultFold]).reverse()
-    
-      //Create a function that folds the monad stack
-      const makeFold = (callbacks) => asyncCompose([idFunc].concat(foldFunctions), callbacks)
-    
-      // Define the prototype of the resulting monad stack
-      const baseStackProto = {
-        stack: stack,
-        prototype: this.prototype,
-        chain (funk) {
-          const funkAndUnwrap = (val) => unwrap(funk(val))
-          if (!process.debug) {
-            funkAndUnwrap.toString = () => 'unwrap(' + funk.toString() + ')'
+    const monadWrapperProto = {
+      chain (funk) {
+        const funkAndUnwrap = (val) => {
+          if(typeof funk !== 'function'){
+            console.log(funk)
           }
-          return create(stack.last.chain(funkAndUnwrap, this._value))
-        },
-        lift (proto, val) {
-          return create(stack.lift(val, stack.membersOriginal.indexOf(proto)))
-        },
-        of (value) {
-          return create(stack.last.of(value))
-        },
-        map (funk) {
-          return this.chain((val) => this.of(funk(val)))
-        },
-        tap (funk) {
-          return funk(this)
-        },
-        kleisi (monad) {
-          return this.chain((_) => monad)
-        },
-        value (callbacks) {
-          callbacks = typeof callbacks === 'function' ? { onValue: callbacks } : callbacks
-          return this.run(makeFold(callbacks || {}))
-        },
-        run (callback) {
-          return makeRunner(callback)(this._value)
-        },
-        toString () {
-          return JSON.stringify(this._value)
+          const newVal = funk.call(this.constructor, val, this.constructor)
+          if (!newVal.hasOwnProperty('_value')) {throw JSON.stringify(newVal) + ' is not a wrapped value'}
+          if (newVal.stack.name !== this.stack.name) {throw `${this.stack.name} is not the same as ${newVal.stack.name}`}
+          return newVal._value
         }
+        if (!process.debug) {
+          funkAndUnwrap.toString = () => 'unwrap(' + funk.toString() + ')'
+        }
+        return this.constructor(this.stack.chain(funkAndUnwrap, this._value))
+      },
+      of (value) {
+        return this.constructor(this.stack.of(value))
+      },
+      map (funk) {
+        return this.chain((val) => this.of(funk(val)))
+      },
+      ap (val) { 
+        return this.chain(f => val.map(f))
+      },
+      tap (funk) {
+        return funk(this)
+      },
+      andThen (monad) {
+        return this.chain((_) => monad)
+      },
+      value (callbacks, environment) {
+        const stack = this.stack
+        return this.run((val) => {
+          return stack.fold.call(callbacks, (val) => {
+            if(typeof callbacks === 'function') {
+              callbacks(val)
+            }else if (typeof callbacks === 'object' && typeof callbacks.onValue === 'function'){
+              callbacks.onValue(val)
+            }
+            return val
+          }, val)
+        }, environment)
+      //  return this.run(makeFold(callbacks || {}), environment)
+      },
+      debug () {
+        this.run((val) => console.log(val))
+        debugger
+        return this
+      },
+      run (callback, environment) {
+        return this.stack.run.call(environment, callback||idFunc, this._value)
+      },
+      toString () {
+        return JSON.stringify(this._value)
       }
+    }
     
-      // Promotes a function from a monad definition to a monad stack method, so it can be used for chaining
-      const promoteToMethod = (funk, monadDefinition) => function () {
-        const args = Array.prototype.slice.call(arguments)
-        const level = stack.members.indexOf(monadDefinition)
-        return this.chain((val) => {
-          return create(stack.lift(funk.apply(monadDefinition, args.concat([val])),level) )
-        })
+    // Promotes a function from a monad definition to a monad stack method, so it can be used for chaining
+    const promoteToMethod = (funk, monadDefinition) => function () {
+      const args = Array.prototype.slice.call(arguments)
+      return this.chain((val) => {
+        return this.constructor(funk.apply(monadDefinition, args.concat([val])))
+      })
+    }
+    
+    // Promotes a function from a monad definition to a stack constructor
+    const promoteToConstructor = (funk, monadDefinition) => function () {
+      return this(funk.apply(monadDefinition, arguments))
+    }
+    
+    module.exports = (stack) => { 
+      const monad = assign(Object.create(monadWrapperProto), helpers.monadMapVals(promoteToMethod, stack))
+      const constructor = (val) => {
+        var object = Object.create(monad)
+        object._value = val
+        return object
       }
-    
-      // Promotes a function from a monad definition to a stack constructor
-      const promoteToConstructor = (funk, monadDefinition) => function () {
-        const level = stack.members.indexOf(monadDefinition)
-        return create(stack.lift(funk.apply(monadDefinition, arguments), level))
-      }
-    
-      // Augment the stack prototype with helper methods
-      const stackProto = assign.apply(null, [baseStackProto].concat(stack.members.map(monad => monadMapVals(promoteToMethod, monad))))
-    
-      // The constructor function creates a new object and wraps it in the stack prototype
-      const create = (val) => {
-        return wrapVal(stackProto, val)
-      }
-    
-      // Add relevant methods from the monadic interface to the stack constructor
-      create.of = stackProto.of
-      create.lift = stackProto.lift
-      create.prototype = stackProto
-    
-      // Augment the stack constructor with helper methods
-      return assign.apply(null, [create].concat(stack.members.map(monad => monadMapVals(promoteToConstructor, monad))))
+      monad.stack = stack
+      //TODO remove this
+      monad.constructor = assign(constructor, helpers.monadMapVals(promoteToConstructor, stack))
+      monad.constructor.of = monad.of.bind(monad)
+      monad.constructor.prototype = monad
+      return monad.constructor
     }
     
     

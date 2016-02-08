@@ -1,6 +1,6 @@
 module.exports = {
-  '1': require('../tutorial/db_example_part_1').test,
-  '2': require('../tutorial/db_example_part_2').test, 
-  '3': require('../tutorial/db_example_part_3').test,
-  '4': require('../tutorial/db_example_part_4').test
+  'p1': require('../tutorial/p1').test,
+  'p2': require('../tutorial/p2').test, 
+  'p3': require('../tutorial/p3').test,
+  'p4': require('../tutorial/p4').test
 }

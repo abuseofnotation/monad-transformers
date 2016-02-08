@@ -22,38 +22,34 @@ Chains a function that returns a `maybe` value in the computation
 
     
     const idFunc = a => a
-    //TODO use this
-    const nothing = {maybeVal:undefined}
     exports.maybe = {
       // Standard functions
       name: 'Maybe',
-      // (val) => M({maybeVal:val})
-      of (val) { return this.outer.of({maybeVal: val }) },
-      // (val => M({maybeVal:val}) , M({maybeVal:val})) => M({maybeVal:val})
+      // (val) => M({value:val})
+      of (val) { return this.outer.of({value: val, something:true }) },
+      // (val => M({value:val}) , M({value:val})) => M({value:val})
       chain (funk, mMaybeVal) {
-        return this.outer.chain((maybeVal) => {
-          return maybeVal.maybeVal === undefined ? this.outer.of(maybeVal) : funk(maybeVal.maybeVal)
+        return this.outer.chain((value) => {
+          return value.something ? funk(value.value) : this.outer.of(value) 
         }, mMaybeVal)
       },
-      // (M(val)) => M({maybeVal:val})
+      // (M(val)) => M({value:val})
       lift (mVal) {
-        return this.outer.chain((val) => this.outer.of({maybeVal: val}), mVal)
+        return this.outer.chain((val) => this.outer.of({value: val, something: true}), mVal)
       },
-      // ((val) => otherVal, M({maybeVal:val})) => otherVal
-      value (funk, mMaybeVal) {
-        return this.outer.value((maybeVal) => {
-          return maybeVal.maybeVal === undefined ? maybeVal : funk(maybeVal.maybeVal)
-        }, mMaybeVal)
-      },
-      fold (value, maybeVal) {
-          return maybeVal.maybeVal === undefined ? (this.onNothing || idFunc )() : value(maybeVal.maybeVal)
+      fold (value, maybe) {
+          return maybe.something ? value(maybe.value) : (this.onNothing || idFunc )() 
       },
       // Custom functions
       maybeGet (key, val) {
-        return this.of(val[key])
+        return val[key] !== undefined ? this.of(val[key]) : this.outer.of({something: false})
+      },
+      nothing () {
+        return this.outer.of({something: false})
       },
       maybeMap (funk, val) {
-        return this.of(funk(val))
+        const value = funk(val)
+        return value !== undefined ? this.of(value) : this.outer.of({something: false})
       }
     }
 
@@ -170,43 +166,36 @@ Calls `f` with the current value as an argument and then concats the result to t
       // Standard functions
       // (val) => M([val, log])
       of (val) {
-        return this.outer.of([val, undefined])
+        return this.outer.of({value: val, writer: undefined})
       },
     
       // (val => M([val, log]), M([val, log])) => M([val, log])
       chain (funk, mWriterVal) {
         return this.outer.chain((writerVal) => {
-          const val = writerVal[0], log = writerVal[1] 
+          const val = writerVal.value, log = writerVal.writer
           const newMWriterVal = funk(val)
           return this.outer.chain((newWriterVal) => {
-            const newVal = newWriterVal[0], newLog = newWriterVal[1]
-            return this.outer.of([newVal, concatLog(log, newLog)])
+            const newVal = newWriterVal.value, newLog = newWriterVal.writer
+            return this.outer.of({value: newVal, writer: concatLog(log, newLog)})
           }, newMWriterVal)
         }, mWriterVal)
     
       },
-    
       // (M(val) => M([val, log])
       lift (mVal) {
-        return this.outer.chain((val) => this.outer.of([val, undefined]), mVal)
-      },
-      // ((val) => b, M([val, log])) => b
-      value (funk, mWriterVal) {
-        return this.outer.value((writerVal) => {
-          return funk(writerVal[0])
-        }, mWriterVal)
+        return this.outer.chain((val) => this.outer.of({value: val, writer: undefined}), mVal)
       },
       // ((val) => b, M([val, log])) => b
       fold (value, writerVal) {
-        (this.onWriterLog || idFunc)(writerVal[1])
-        return value(writerVal[0])
+        (this.onWriterLog || idFunc)(writerVal.writer)
+        return value(writerVal.value)
       },
       // Custom functions
       tell (message, val) {
-        return this.outer.of([val, message])
+        return this.outer.of({value: val, writer:message})
       },
       tellMap (fn, val) {
-        return this.outer.of([val, fn(val)])
+        return this.outer.of({value: val, writer: fn(val)})
       }
     }
 
@@ -231,10 +220,6 @@ Returns the current state.
 
 Maps over the current value and state with `f`. The function should return an array containing two elements - the new value and the new state. 
 
-### `value.statefulChain(f)` 
-
-Maps over the current value and state with `f`. The function should return a new monad value. 
-
 ### Definition 
 
 ![State](img/state.png) 
@@ -242,50 +227,91 @@ Maps over the current value and state with `f`. The function should return a new
 ###Source 
 
     const idFunc = a=>a
+    
     exports.state = {
       name: 'State',
       //Standard functions:
       of (val) {
-        return (prevState) => this.outer.of([val, prevState])
+        return (prevState) => this.outer.of({value: val, state: prevState})
       },
       chain (funk, state) {
         return (prevState) =>
           this.outer.chain((params) => {
-            const newVal = params[0], newState = params[1]
+            const newVal = params.value, newState = params.state
             return funk(newVal)(newState)
           }, state(prevState))
       },
       lift (val) {
         return (prevState) =>
-          this.outer.chain((innerValue) => this.outer.of([innerValue, prevState]), val)
-      },
-      value (f, state) {
-        return this.outer.value((params) => {
-          return f(params[0])
-        }, state())
+          this.outer.chain((innerValue) => this.outer.of({value: innerValue, state: prevState}), val)
       },
       run (f, state) {
         return f(state())
       },
       fold (value, params) {
-        (this.onState || idFunc)(params[1])
-        return value(params[0])
+        (this.onState || idFunc)(params.state)
+        return value(params.value)
       },
       //Custom functions:
-      load (val) {
-        return (prevState) => this.outer.of([prevState, prevState])
+      loadState (val) {
+        return (prevState) => this.outer.of({value: prevState, state: prevState})
       },
-      save (val) {
-        return (prevState) => this.outer.of([val, val])
+      saveState (val) {
+        return (prevState) => this.outer.of({value:val, state: val})
       },
       statefulMap (funk, val) {
-        return (prevState) => this.outer.of(funk(val, prevState))
+        return (prevState) => {
+          const stateTuple = funk(val, prevState)
+          return this.outer.of({value: stateTuple[0], state: stateTuple[1]})
+        }
       },
-      statefulChain(funk, val) {
-        return (prevState) => funk(val, prevState)
+      setState (newState, val) {
+        return (prevState) => this.outer.of({value:val, state: newState})
+      },
+      mapState (funk, val) {
+        return (prevState) => this.outer.of({value:val, state: funk(prevState, val)})
       }
     }
     
+## `comp.reader` 
+
+The `reader` monad transformer allows you to specify an immutable configuration for your function which you can use to tweek the way it behaves. 
+
+### Definition 
+
+![State](img/writer.png) 
+
+###Source 
+
+    exports.reader = {
+      name: 'Reader',
+      //Standard functions:
+      of (val) {
+        return (env) => this.outer.of(val)
+      },
+      chain (funk, reader) {
+        return (env) =>
+          this.outer.chain((val) => {
+            return funk(val)(env)
+          }, reader(env))
+      },
+      lift (val) {
+        return (env) => val
+      },
+      run (f, reader) {
+        return f(reader(this.environment))
+      },
+      fold (value, val) {
+        return value(val)
+      },
+      //Custom functions:
+      readerMap (f, val) {
+        return (environment) => this.outer.of(f(val, environment))
+      },
+      loadEnvironment(val) {
+        return (environment) => this.outer.of(environment)
+      }
+    }
 
 
 [_View in GitHub_](../lib/comp.js) 
