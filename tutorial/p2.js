@@ -1,9 +1,10 @@
 /* 
 /* # Modifying REST Resources / Parametrizing our data source 
  *
+ * #### Using the monad stack. Using the `Reader` monad.
+ *
  * _This is part 2 from the `monad-transformers` tutorial. See also [part 1](p1.md) and [part 3](p3.md)._
  *
- * > Using the monad stack. Using the `Reader` monad.
  *
  * In the previous chapter we defined some functions for retrieving resources from REST endpoints.
  * Now we will produce some functions that modify the resources they retrieve.
@@ -12,30 +13,31 @@ const mtl = require("../lib/main.js")
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
-const initData = require('./db_example_part_1.js').initData
+const initData = require('./p1.js').initData
 
 const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
 
 /*
- * ## Parametrizing the data source
+ * ## Parametrizing the datasource
  *
- * Let's start by importing what we have so far.
- * As you can see I included some of the resources from the previous tutorial.
+ * Let's start by improving what we have so far.
+ * As you can see I included some of the resources from the previous tutorial, however
  * I could not reuse more of it, because of the way that the `getResource` function was written:
+ * Namely, the function is bound to a specific data source. This means that we won't be able to reuse it
+ * because we will have to always keep track of what in our data is changed. 
  */
 
 const data = initData()
 const GetResource = (url) => data.getResource.bind(null, url)
 
-/* Namely, the function is bound to a specific data source. This means that we won't be able to use it
- * because we will have to always keep track of what in our data is 
- * changed. So let's fix it:
+/*
+ * So let's fix it:
  */
 
 const mGetResource = (url, data) => data.getResource.bind(null, url)
 
 /*
- * So we just parametrized the function. Easy, right? Now we just have to specify which dataSource
+ * So we just parametrized the function. Easy, right? Now we just have to specify which datasource
  * we want to access when we call it.
  *
  * However, this breaks our workflow a bit. In the previous version of the tutorial we could define 
@@ -47,7 +49,7 @@ const oldGetResourceFrom = (type) => (id) =>
     .cont(mGetResource)
 /*
  * Now, because `getResourceFrom` uses `mGetResource` it would also have to accept a 
- * datasource when called, and our whole code would start smelling bad. Unless there is a transformation 
+ * datasource when called, and our whole codebase will become bloated. Unless there is a transformation 
  * that can handle this for us. 
  *
  * And as you might suspect, there actually is one.   
@@ -55,7 +57,6 @@ const oldGetResourceFrom = (type) => (id) =>
  * The `Reader` monad transformation is the evil twin of the `Writer` monad transformation.
  * It gives us access to a immutable datastructure sometimes called an 'environment' for storing all kinds of configurations
  * throughout our computation without bothering to pass it around to each new function.
- *
  * It is like an additional parameter that you cannot change.
  *
  * In order to use the `Reader` monad transformer let's first refactor our code a bit:
@@ -65,8 +66,8 @@ const oldGetResourceFrom2 = (type) => (id) =>
   m.of(suffix(type, id))
     .chain((url) => m.fromContinuation(mGetResource(url)))
 /*
- * Remember this? This is the first version of the `getResourceFrom` function that did not use the `cont` helper.
- * Or it is close to it anyways - this one uses another helper - the `fromContinuation` constructor). We desugared our 
+ * Remember this? This is the first version of the `getResourceFrom` function which does not use the `cont` helper.
+ * Or it is close to it anyways - this one uses another helper - the `fromContinuation` constructor. We desugared our 
  * function in order to combine it with another helper - `loadEnvironment`.
  */
 
@@ -75,9 +76,11 @@ const mGetResourceFrom = (type, id) =>
     m.fromContinuation(mGetResource(suffix(type, id), environment)))
 
 /*
- * So that is the formula for using the `Reader`: we use the environment whenever we need it.
- * We define the environment in the `run` method:
- * In that way we can run it against the data that we defined earlier or any other.
+ * So that is the formula for using the `Reader`: we define the environment in the `run` method, 
+ * we use the environment whenever we need it in the function body, and all functions that we call with
+ * `chain` also have access to the environment.
+ *
+ * The `Reader` allows us to run our function against the data that we defined earlier or any other.
  */
 
 exports.test = {}
@@ -93,13 +96,10 @@ exports.test.mGetResource = (test) => {
  * ### Interlude: Monad transformers and the transformer stack
  *
  * That is all good, you might say, but why did we have to take a step back in order to use it? Why can't we still use the
- * `cont` helper as we used to. 
- * 
- * The reason for this is that we are combining the effects of two different monad transformers. And although it may seem 
- * so from a first glance, monad transformers aren't in any way related to each other.
- *
- * A monad transformer stack is defined just by specifying the transformers that it uses and in what order.
- *
+ * `cont` helper _and_ have access to the environment?
+ * The reason for this is that we are combining the effects of two different monad transformers. 
+ * And although it may seem so from a first glance, monad transformers aren't in any way related to each other. 
+ * A monad transformer stack is defined just by specifying the transformers that it uses and in which order.
  * For example here is a monad transformer stack that we can use for this tutorial:
  */
 
@@ -191,7 +191,8 @@ const mMakeFarmer = modifyUser(makeFarmer)
  * Beautiful. Let's test that:
  */
 exports.test.modify  = (test) => {
-   m.of('john').chain(mMakeFarmer)
+   m.of('john')
+    .chain(mMakeFarmer)
     .run((result) => {
       test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"farmer"})
       test.done()
@@ -202,8 +203,8 @@ exports.test.modify  = (test) => {
  */
 exports.test.modifyAndGet  = (test) => {
    m.of('john')
-     .chain(mMakeFarmer)
-     .chain((_)=> mGetResourceFrom('users', 'john'))
+    .chain(mMakeFarmer)
+    .chain((_)=> mGetResourceFrom('users', 'john'))
     .run((result) => {
       test.deepEqual(result.taskSuccess.value.value,{name:"John", occupation:"farmer"})
       test.done()
@@ -219,10 +220,10 @@ exports.test.modifyAndGet  = (test) => {
  * ## Parametrizing the monad stack
  *
  * Now we can use our functions with any datasource that supports the same API, however we still
- * are bound to the implementation of the monad stack, that is, we will have to refactor them 
- * every time we want to use them with a different one. To fix this, we just have to parametrize
- * them, that is, add the `m` value as an argument. With this we are done and we can export them
- * for our next part:
+ * are bound to the implementation of the monad stack. That is, we will have to refactor them 
+ * every time we want to use them with a different stack. To fix this, we have to parametrize
+ * them further - add the `m` value as an argument. With this we are done and we can export them
+ * for the next part of the tutorial:
  */
 exports.initData = initData
 

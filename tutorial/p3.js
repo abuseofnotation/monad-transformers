@@ -1,14 +1,15 @@
 /* 
  * # Side effects
  *
+ * #### Creating and using custom monads.
+ *
  * _This is part 3 from the `monad-transformers` tutorial. See also [part 1](p1.md) and [part 2](p2.md)._
  *
- * > Creating and using custom monads.
  *
- * The monadic functions that we used so far were really cool and all, but they were just functions, albeit
+ * The monadic functions that we used so far were really cool and all but they were just functions, albeit
  * asynchronous. They only received input at the beginning and did not place any output until the end.
- * Technically they were not pure (because they accessed and modified external resources), but they were
- * pretty close. Now we are going to do something different - we are going to handle interactive IO. 
+ * Technically they were not pure (because they accessed and modified external resources) but they were
+ * pretty close. Now we are going to do something different - we are going to handle interactive side effects.
  */
 
 const assign = require('object-assign')
@@ -19,15 +20,15 @@ if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
 
-/* Now in the previous example we handled side effects using the `Reader` monad and 
- * aside from the fact that we were abusing it (the environment in `Reader` is supposed
- * to be immutable, and ours was mutable). This approach wasn't bad
- * at all - when calling the function we could specify what part of the environment it was permitted to 
- * touch. From inside the function we could regulate which parts of the code had access to 
+/* Now in the previous example we handled some side effects using the `Reader` monad and 
+ * aside from the fact that we were abusing it a little (the environment in `Reader` is supposed
+ * to be immutable and ours wasn't) this approach wasn't bad
+ * at all - when calling the function we could specify on which environment it was permitted to act upon.
+ * From the inside of the function we could regulate which parts of the code had access to 
  * the environment - for example functions we call using `map` cannot touch it (unless we loaded it 
  * beforehand using `loadEnvironment`).
  * 
- * When doing IO we also have an environment on which we act on (in this example it is the `process` object
+ * When doing IO we also have an environment on which we act on (in this example it will be the `process` object
  * in nodeJS)
  * so it make sense to use something as `Reader` as a base. Only this time we are going to modify it 
  * just a little bit, so it fits our needs exactly.
@@ -38,13 +39,12 @@ if ( global.v8debug ) {
  *
  * 1. An IO monad is defined which holds an external environment within itself.
  *
- * 2. Users use the monad to compose pure functions which generate a side effect.
+ * 2. Users use the monad to compose pure functions which generate side effects.
  *
- * 3. The effects are executed.
+ * 3. The side effects are executed.
  *
- * That is what we are going to do here now.
- *
- * The first part is to define a monad transformer for handling IO.
+ * That is precicely what we are going to do with our monad transformer. 
+ * The first part is to define it.
  * We are going to start with the original implementation of the `Reader` monad transformer which is
  * the following:
  */
@@ -86,7 +86,7 @@ const reader = {
  * how to apply a function which takes a normal plain value and returns an instance of `Reader`
  * to an already-created `Reader`(the infamous `chain`).
  * However most of the works is done via custom functions (helpers if you will).
- * The helpers are the interface of our monad.
+ * The helpers are the interface of our monad transformer.
  *
  * Let's see how far can we go with our custom monad by keeping the standard functionality as-is 
  * and only redefine the helpers, so they are more IO-friendly.
@@ -112,19 +112,18 @@ io.run = function run (f, reader) {
  *
  * The standars `Reader` helpers provide direct access to the environment to the functions we compose.
  * Which is OK if the environment is immutable so our users can see it but cannot touch it but
- * not OK in the current case. Now we prefer to keep our side effects inside the monad's
- * implementation - that is the purely-functional contract.
+ * not OK in the current case. We would prefer to manipulate the environment from inside of the monad's
+ * implementation.
  *
  * So let's just remove the original helpers and start from scratch:
  */
 delete io.readerMap
 delete io.loadEnvironment
 /* 
- * If we wanted to keep them, we would have to change their names so our  new monad can be used 
+ * If we wanted to keep them, we would have to change their names so our new monad can be used 
  * along with the original `Reader`.
  *
- * Now let's start defining our new helpers: 
- *
+ * Now let's start defining our new helpers.
  * We will keep it simple defining just one method to write in the standard output and one to read
  * from the standard input.
  *
@@ -139,10 +138,10 @@ io.write = function (f, val) {
   }
 }
 /*
- * The reading part is a bit harder because the input is asynchronous.
+ * The reading part is a bit harder because the input is _asynchronous_.
  * So how do we "return" the input if it is not there yet? 
  * One way to do it is to return a continuation instead and then
- * handle this continuation externaly using the task monad. 
+ * handle this continuation externaly using the Task monad. 
  *
  * It will look like this:
  */
@@ -181,9 +180,7 @@ const getUsername = () =>
  * By now you probably know that although the second step is redundant it 
  * has to be there in order for our transformations to act independently of one another, and to be usable
  * by themselves.
- *
  * What you may not know is that they don't _have_ to be independent.
- *
  * Sure, defining the transformers separately from one another gives us much freedom in composing them
  * but sometimes we may want to define a transformer for a specific use case and on a 
  * specific stack. If that is what we want, we can freely make use of the other monads that we have there:
@@ -271,7 +268,7 @@ const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.read
  * Let's import them:
  */
 
-const previous = require('./db_example_part_2.js')
+const previous = require('./p2.js')
 const initData = previous.initData
 const mGetResourceFrom = previous.mGetResourceFrom
 const mPostResourceTo = previous.mPostResourceTo

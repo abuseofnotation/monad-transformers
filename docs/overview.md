@@ -47,7 +47,9 @@ The library features five predefined monad stacks.
     
 
 
-## Helpers Some helper functions that we want to keep handy: 
+## Helpers 
+
+Some helper functions that we want to keep handy: 
 
     const helpers = require('./helpers')
     mtl.curry = helpers.curry

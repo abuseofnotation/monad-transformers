@@ -1,17 +1,22 @@
 /* 
  * # Retrieving REST Resources
+ *
+ * #### Using the monad stack. Using the `Task` monad, the `Maybe` monad and the `Writer` monad.
  * 
  * _This is part 1 from the `monad-transformers` tutorial. See also [part 2](p2.md) and [part 3](p3.md)._
  *
- * > Using the monad stack. Using the `Task` monad, the `Maybe` monad and the `Writer` monad.
  *
  * The following series of tutorials show performing some real-world tasks using the `monad-transformers` library.
  *
- * Our first task will be related to retrieving info about the users and their occupations and handling different kinds
+ * Our first task will be related to retrieving resources from a RESTful service and handling different kinds
  * of errors.
  *
- * For this we will be mocking a simple simple REST API with a set of resources defined in the `data`
- * object and functions that simulate retriving and modifying resources:
+ * ## Mocking our Data
+ *
+ * Below is a simple simple fake REST API with a set of resources defined in the `data`
+ * object and functions that simulate retriving and modifying resources asyncronously.
+ *
+ * We will be working with this service throughout the tutorial.
  */
 const mtl = require('../lib/main')
 if ( global.v8debug ) {
@@ -68,10 +73,8 @@ const suffix = (suffix, str) => suffix + '/' + str
  * ### Composing functions with mtl
  *
  * Another important technique in functional programming is the technique of combining different functions using
- * composition and after looking at these two helpers, it is not such a long shot to imagine composing them into 
- * one function that retrieves a resource given its ID:
- *
- * Here is how this will work using simple function composition:
+ * composition. After looking at these two helpers, it is not such a long shot to imagine composing them into 
+ * one function that retrieves a resource given its ID. Here is how this will work using simple function composition:
  */
 
 const compose = (f, g) => (a) => g(f(a))
@@ -81,15 +84,11 @@ const ordinaryGetResourceFrom = compose(suffix, mGetResource)
 /* This is cool, however the `ordinaryGetResourceFrom` function is asynchronous and therefore it does not return a value.
  * Therefore the function that we just defined cannot be composed any further via simple function composition.
  *
- * However it *can* be composed in principle, and as a matter of fact we do that quite often in Javascript. 
- * You know, using Promises: We pass an async functions to the `then` method, and then we chain another async function and
+ * However it *can* be composed in principle, and as a matter of fact we do that quite often in JavaScript. 
+ * You know, using Promises. We pass an async functions to the `then` method, and then we chain another async function and
  * so on.
  *
- * The `monad-transformers` lib supports Promises too - more precisely their immutable conterparts - Tasks. 
- *
- * Tasks are just one of the library's capabilities.
- *
- * This means that we can wrap our normal 
+ * The `monad-transformers` lib supports Promises too among other monads - more precisely their immutable conterparts [Tasks](http://docs.folktalejs.org/en/latest/api/data/task/index.html).  This means that we can wrap our normal 
  * callback-based async function into a task and just return it, using [`chain`](../wrapper.md) (which is kinda like the `then` for 
  * Promises).
  */
@@ -100,7 +99,7 @@ const taskGetResourceFrom = (type) => (id) =>
     m.of(suffix(type, id))
     .chain((url) => m.fromTask(new Task(mGetResource(url))))
 /*
- * This works, but there is a slightly prettier way to write it using the `cont` function, which creates a
+ * There is a slightly prettier way to write this using the `cont` helper function, which creates a
  * Task behind the scenes.
  */
 const getResourceFrom = (type) => (id) => 
@@ -115,17 +114,15 @@ const getResourceFrom = (type) => (id) =>
  * - It is written in such a way that you don't have to know about the async lib that is being used - 
  *   you just use the `cont` helper.
  *
- * - We haven't lost the ability to do normal function composition. We can do this by using the `map` 
- * function, provided by `monad-transformer`. Functions, composed with `map` don't have to know about monads and wrappers at all.
+ * - We haven't lost the ability to do normal function composition. We can do it by using the [`map`](../wrapper.md)
+ * function. Functions, composed with `map` don't have to know about monads and wrappers at all.
  *
- * Using `getResouceFrom` We will define one more helper function - one that given a person object, retrieves info about
+ * Using our newly-defined `getResouceFrom`, we will define one more helper function - one that given a person object, retrieves info about
  * its occupation.
  * The function is simple - just retrieve the `occupation` key from the person object and then make a request for
- * it from the `occupations` endpoint (see the data model above).
- *
- * Besides modes of composition, `monad-transformers` gives you all kinds of helper functions that you can use.
- * In this case we receive a plain JS object an want to access one of its properties. There is a function that 
- * does that in the `Maybe` monad transformer called `maybeGet`. The strength of `maybeGet` is that it also handles
+ * it from the `occupations` endpoint. You can check the data model above, but basically we receive a plain JS object 
+ * and  we have to access one of its properties. There is a helper for doing that in the `Maybe` monad transformer 
+ * called `maybeGet`. The strength of `maybeGet` is that it also handles
  * the case when the value of the requested property is not defined.
  */
 
@@ -134,12 +131,11 @@ const getOccupationInfo = (mPersonalInfo) =>
     .maybeGet('occupation')
     .chain(getResourceFrom('occupations'))
 
-/* Notice also how we compose mtl functions by using `chain`.
+/* Notice also how we compose functions that return monads by using `chain`.
  *
  * ## Writing our program
  *
  * Now let's apply what we defined so far and write some code that actually does something.
- *
  * The following snippet first retrieves the details for a given user then retrieve the details of his
  * occupation and finally displays both pieces of info one after the other:
  *
@@ -190,8 +186,7 @@ exports.test.dbSuccess = (test) => getPersonInfo('john')
     test.done()
   }) 
 /* 
- * This works fine but I better explain the `taskSuccess.value.value.value` part.
- *
+ * This works fine but we better explain the `taskSuccess.value.value.value` part:
  * Each monad transformation which we use defines its own object namespace. In that namespace
  * we can see its value, which is actually the namespace of another monad. So effectively this means that 
  * in order to get to our value, we have to go through all these namespaces.
