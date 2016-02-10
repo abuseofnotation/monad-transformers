@@ -32,22 +32,17 @@ exports.advanced = {
       setTimeout(()=>reject(3), 10)
     })
       .map((val) => val + 1)
-      .rejectedMap((a) => {
+      .value({onTaskError:(a) => {
         test.equal(a, 3)
-        test.done()
+        test.done()}
       })
-      .value()
 
   },
   stateIntegration (test) {
     mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(()=>resolve(3), 10)
     })
-    .save()
-    .rejectedMap(a => {
-      test.ok(false)
-      return a
-    })
+    .saveState()
     .cont((val) => eventualIncrement(val))
     .statefulMap((val, state) => {
       test.equal(state, 3)
@@ -57,10 +52,8 @@ exports.advanced = {
     .chain((val) => {
       return mtl.advanced.rejected()
     })
-    .rejectedMap(a => {
-      test.done()
+    .value({onTaskError:a => {test.done()}
     })
-    .value()
   }
 }
 

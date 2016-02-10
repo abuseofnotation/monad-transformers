@@ -27,7 +27,10 @@ module.exports = function (grunt) {
             'docs/wrapper.md': ['lib/wrapper.js'],
             'docs/implementing-transformer.md': ['lib/id.js'],
             'docs/api.md': ['lib/data.js', 'lib/comp.js'],
-            'docs/example.md': ['test/db_example.js']
+            'docs/example.md': ['test/db_example.js'],
+            'docs/tutorial/p1.md': ['tutorial/p1.js'],
+            'docs/tutorial/p2.md': ['tutorial/p2.js'],
+            'docs/tutorial/p3.md': ['tutorial/p3.js'],
           },
        }
     },

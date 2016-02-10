@@ -8,9 +8,9 @@ var permutations = require('./permutations')
 exports.reader = permutations(a => (a.indexOf(mtl.comp.reader) !== -1), (one, two, three) => {
   return {
     environment: (test) => {
-      const writer = mtl.make(one, two, three)
-      writer.of(5)
-        .envMap((val, env) => env)
+      const reader = mtl.make(one, two, three)
+      reader.of(5)
+        .readerMap((val, env) => env)
         .map((val) => {
           test.equal(val, 6)
           return val
