@@ -18,7 +18,7 @@ see [my other library](http://boris-marinov.github.io/funktion/).
 
 - **Highly composable** - Every monad transformer works together with every other. 
 - **Functions all the way down** - The monad transformers are defined by just writing functions transforming one type to another. The stack may contain any value, including values coming from third party libs and the build-ins.
-- **Chaining API ** - The library features an chaining API, inspired by [underscore.js](http://underscorejs.org/#chaining)
+- **Chaining API** - The library features an chaining API, inspired by [underscore.js](http://underscorejs.org/#chaining)
 , familiar and easy-to-use for JS developers.
 - **Automatic wrapping and unwrapping of Values** - This package contains a stack component which abstracts away the process of wrapping and unwrapping of values, thus making the types easy to write and understand.
 
