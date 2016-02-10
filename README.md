@@ -32,18 +32,6 @@ This package contains a stack component which abstracts away the process of wrap
 
 # Quick tutorial
 
-## Installing
-
-### From CommonJS environment
-Import the module and start playing:
-
-          var mtl = require('monad-transformers')
-          
-### From browser
-import one of the files from the "target" directory and use `window.mtl` to access the lib.
-
-## Using
-
 Call `mtl.make` to compose two or several types in a new type:
 
      var mtl = require('monad-transformers')
@@ -73,7 +61,6 @@ Use the methods coming from the types that you composed:
   
 # Docs
 * [Overview](docs/overview.md)
-* [An example](docs/example.md)
 * [Object wrapper API](docs/wrapper.md)
 * [Types API](docs/api.md)
 * [Implementing a monad transformer](docs/implementing-transformer.md)
