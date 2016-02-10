@@ -41,11 +41,12 @@ if ( global.v8debug ) {
  *
  * 2. Users use the monad to compose pure functions which generate side effects.
  *
- * 3. The side effects are executed.
+ * 3. The side effects are executed by some kind of `main` function which is the only impure part of the
+ * program.
  *
  * That is precicely what we are going to do with our monad transformer. 
  * The first part is to define it.
- * We are going to start with the original implementation of the `Reader` monad transformer which is
+ * We are going to start with the implementation of the `Reader` monad transformer which is
  * the following:
  */
 
@@ -114,14 +115,13 @@ io.run = function run (f, reader) {
  * Which is OK if the environment is immutable so our users can see it but cannot touch it but
  * not OK in the current case. We would prefer to manipulate the environment from inside of the monad's
  * implementation.
- *
- * So let's just remove the original helpers and start from scratch:
+ * So let's remove the original helpers and start from scratch.
+ * If we wanted to keep them, we would have to change their names so our new monad transformer can be used 
+ * along with the original `Reader`.
  */
 delete io.readerMap
 delete io.loadEnvironment
 /* 
- * If we wanted to keep them, we would have to change their names so our new monad can be used 
- * along with the original `Reader`.
  *
  * Now let's start defining our new helpers.
  * We will keep it simple defining just one method to write in the standard output and one to read
@@ -149,20 +149,23 @@ const unescapeString = (str) => {
   const str2 = '"' + str.slice(0,-1).slice(1) +'"'
   return JSON.parse(str2).trim()
 }
+//Calls the callback with the user input
+const promptInput = (process, callback) => {
+    const processData = (text) => {
+      process.stdin.removeListener('data', processData)
+      process.stdin.pause()
+      const input = util.inspect(text)
+      callback(unescapeString(input))
+    }
+    process.stdin.resume()
+    process.stdin.on('data',processData)
+}
 
 io.promptFor = function (f,val) {
   return (process) => {
     process.stdout.write(f(val)) //prompt the user to write a value
-    return this.outer.of((error, success) => {//Return a continuation, resolved with the user input
-      const processData = (text) => {
-        process.stdin.removeListener('data', processData)
-        process.stdin.pause()
-        const input = util.inspect(text)
-        success(unescapeString(input))
-      }
-      process.stdin.resume()
-      process.stdin.on('data',processData)
-    })
+    return this.outer.of((error, success) => 
+      promptInput(process, success))
   }
 }
 /* 
@@ -182,8 +185,8 @@ const getUsername = () =>
  * by themselves.
  * What you may not know is that they don't _have_ to be independent.
  * Sure, defining the transformers separately from one another gives us much freedom in composing them
- * but sometimes we may want to define a transformer for a specific use case and on a 
- * specific stack. If that is what we want, we can freely make use of the other monads that we have there:
+ * but sometimes we may want to define a transformer that will work only on a 
+ * specific stack. If that is what we want, we can freely make use of the other monads that we have in that stack.
  *
  * ###Interlude: Dependencies between monad transformers. Reusing functions in across different stacks
  *
@@ -193,36 +196,26 @@ const getUsername = () =>
  *
  * Monads are specified in the `make` method from left to right. This means that if we
  * have a stack composed of `mtl.base.task` and then `io` then we can use the `Task` monad transformer
- * in the implementation of the `io` monad transformer.
+ * in the implementation of the `io` monad transformer. Almost as if the `io` object inherits from the `Task` object.
  *
- * Let's try it. for example by redefining the `promptFor` method so it creates a Task directly
- * (all we have to do is change the `of` method to `fromContinuation`):
+ * Let's try it. For example if we want to redefining the `promptFor` method so it creates a Task directly
+ * all we have to do is change the `of` method to `fromContinuation`:
  */
 io.promptFor = function (f,val) {
   return (process) => {
-    process.stdout.write(f(val))
-    return this.outer.fromContinuation((error, success) => {
-      const processData = (text) => {
-        process.stdin.removeListener('data', processData)
-        process.stdin.pause()
-        const input = util.inspect(text)
-        success(unescapeString(input))
-      }
-      process.stdin.resume()
-      process.stdin.on('data',processData)
-    })
+    process.stdout.write(f(val)) //prompt the user to write a value
+    return this.outer.fromContinuation((error, success) => 
+      promptInput(process, success))
   }
 }
 /*
  * When we define the stack we have to make sure that there is a Task monad transformer to the left
- * of the monad that uses it:
+ * of the monad that uses it.
+ * Then we can use the function just the way that we wanted to use it:
  */
 
 const ioMNew = mtl.make(mtl.base.task, io)
 
-/*
- * Then we can use the function just the way that we wanted to use it:
- */
 const getUsernameNew = () =>
   ioMnew.of()
     .promptFor(()=> 'Username: ')
@@ -232,6 +225,10 @@ const getUsernameNew = () =>
  * Because we keep the side effects strictly inside the monad we still can chain
  * the IO-bound functions in the same way as pure ones.
  * Here is a more complex example requesting a username and a password and then displaying them both:
+ *
+ * You may already recognize this pattern - using a custom lambda to bind two or more values to constants
+ * so we can use it for creating a third value (which in this case it is an IO action).
+ *
  */
 const getUsernamePass = () =>
   ioMNew.of()
@@ -247,16 +244,16 @@ const getUsernamePass = () =>
 /*
  * ![User-pass example](../../tutorial/user-pass.gif)
  *
- * You may already recognize this pattern - using a custom lambda to bind two or more values to constants
- * so we can use it for creating a third value (which in this case it is an IO action).
+ * What is cool when building dependencies as monad transformers is that each new transformation "inherits" all
+ * the methods of the previous transformations. So not only can we access the 
+ * methods of the "outer" monad, but also the methods of all monads that come before it.
  *
- * What is cool when building dependencies as monad transformers is that each new transformation "inherits" 
- * the methods of the previous transformations, which means that the `IO` transformation will work on any
- * arbitrary stack, as long as it includes the `Task` transformation, no matter how many other transformations
- * there are.
+ * What this means for our new `IO` transformer is that it will work on any
+ * arbitrary stack, that features the `Task` transformer, no matter how many other transformers there are
+ * between the two.
  *
- * Let's for example define a stack which contains the transformers that we used in the previous examples:
- *
+ * Let's for example define a stack which contains `IO` but also contains all 
+ * transformers that we used in the previous examples:
  */
 
 const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.reader, io)
@@ -264,8 +261,7 @@ const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.read
 /*
  * This would allow us to run all functions that we defined early on - remember that
  * we parametrized the `m` argument, so they don't rely on explicit stack. 
- *
- * Let's import them:
+ * So let's import them:
  */
 
 const previous = require('./p2.js')
@@ -276,21 +272,24 @@ const mPostResourceTo = previous.mPostResourceTo
 /* 
  * ## Our first "real" application
  *
- * We are doing a command-line interface for retrieving and modifying our resources using the IO monad that
- * we just defined and the functions for retrieving and modifying resources from the previous chapter.
+ * We are doing a command-line interface for retrieving and modifying our resources using the `IO` transformer that
+ * we just defined and the functions for retrieving and modifying resources from the previous part.
  * 
  * As usual we will start by creating some general definitions and will gradually move to more specific use cases.
  * 
  * ### Displaying resources
  * 
- * To display a resource, we must retrieve it and then write it in the screen:
+ * To display a resource, we must retrieve it and then write it in the screen 
+ * (notice that we don't need to pass the stack constructor to the `mGetresourceFrom` function since 
+ * all functions which are composed using `chain` get it, as their last parameter).
  */
 
 prettyPrint = (obj) => JSON.stringify(obj, null, 4)
 
 const displayResource = (type) => (id) => 
-  mGetResourceFrom(type, id, m)
-    .write(()=> `Displaying info for "${id}"`)
+  m.of(id)
+    .write((id)=> `Displaying info for "${id}"`)
+    .chain(mGetResourceFrom(type))
     .write(prettyPrint) 
 
 /* 
@@ -301,7 +300,7 @@ const displayResource = (type) => (id) =>
 const promptForResource = (type) => 
   m.of(type).promptFor((type)=> `${type} ID:`)
 /*
- * As you can probably guess. These two steps can be composed seamlessly:
+ * As you can probably guess these two steps compose seamlessly:
  */
 const promptAndDisplayResource = (type) =>
   promptForResource(type).chain(displayResource(type))
@@ -313,8 +312,7 @@ const promptAndDisplayResource = (type) =>
  *
  * The function looks a bit convoluted, because there are a lot of values involved, but it can be achieved just by
  * combining the steps that we defined so far.
- *
- * The following function propts for a resource, and then allows you to modify one of the resource's properties:
+ * In it, we propt for a resource, and then allows you to modify one of the resource's properties:
  *
  */
 const set = mtl.curry((obj, key, value) => {
@@ -339,7 +337,8 @@ const modifyResourceProperty = (type, property) => promptForResource(type).chain
  *
  * We are now going to create a menu for our console application.
  * We can do that by putting some actions in an object and then `prompt` users for the action that they want to undergo.
- * We are going to solve the problem of our program quitting by calling our `main` function recursively.
+ *
+ * Also we don't want our program to quit when we are finished with a given task. We are going to solve this problem of our program quitting by calling our `main` function recursively.
  */
 
 const start = () =>
@@ -370,4 +369,6 @@ const promptForAction = (actions) =>
 
 /*
  * ![Final example](../../tutorial/final.gif)
+ *
+ * That's it for now. If you have questions or suggestions, go open an issue or [contact me directly](mailto:marinovboris@gmail.com)
  */

@@ -6,21 +6,25 @@
  * _This is part 2 from the `monad-transformers` tutorial. See also [part 1](p1.md) and [part 3](p3.md)._
  *
  *
- * In the previous chapter we defined some functions for retrieving resources from REST endpoints.
+ * In the previous part we defined some functions for retrieving resources from REST endpoints.
  * Now we will produce some functions that modify the resources they retrieve.
  */
 const mtl = require("../lib/main.js")
 if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
-const initData = require('./p1.js').initData
-
-const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
 
 /*
  * ## Parametrizing the datasource
  *
  * Let's start by improving what we have so far.
+ */
+
+const initData = require('./p1.js').initData
+
+const suffix = mtl.curry((suffix, str) => suffix + '/' + str)
+
+/* 
  * As you can see I included some of the resources from the previous tutorial, however
  * I could not reuse more of it, because of the way that the `getResource` function was written:
  * Namely, the function is bound to a specific data source. This means that we won't be able to reuse it
@@ -31,16 +35,14 @@ const data = initData()
 const GetResource = (url) => data.getResource.bind(null, url)
 
 /*
- * So let's fix it:
+ * So let's fix `GetResource`, by accepting the datasource as an additional parameter.
+ * Now we can specify which datasource we want to work with when we call it.
  */
 
 const mGetResource = (url, data) => data.getResource.bind(null, url)
 
 /*
- * So we just parametrized the function. Easy, right? Now we just have to specify which datasource
- * we want to access when we call it.
- *
- * However, this breaks our workflow a bit. In the previous version of the tutorial we could define 
+ * However, this breaks our workflow a bit. In the previous part of the tutorial we could define 
  * this beautiful chaining functions like `getResourceFrom` that were quite handy:
  */
 const oldGetResourceFrom = (type) => (id) => 
@@ -49,15 +51,15 @@ const oldGetResourceFrom = (type) => (id) =>
     .cont(mGetResource)
 /*
  * Now, because `getResourceFrom` uses `mGetResource` it would also have to accept a 
- * datasource when called, and our whole codebase will become bloated. Unless there is a transformation 
+ * datasource when called, and our whole codebase will become bloated. Unless there is a transformer 
  * that can handle this for us. 
  *
  * And as you might suspect, there actually is one.   
  *
- * The `Reader` monad transformation is the evil twin of the `Writer` monad transformation.
+ * The `Reader` monad transformer is the evil twin of the `Writer` monad transformer.
  * It gives us access to a immutable datastructure sometimes called an 'environment' for storing all kinds of configurations
  * throughout our computation without bothering to pass it around to each new function.
- * It is like an additional parameter that you cannot change.
+ * It is like an additional parameter that you always get.
  *
  * In order to use the `Reader` monad transformer let's first refactor our code a bit:
  */
@@ -76,10 +78,6 @@ const mGetResourceFrom = (type, id) =>
     m.fromContinuation(mGetResource(suffix(type, id), environment)))
 
 /*
- * So that is the formula for using the `Reader`: we define the environment in the `run` method, 
- * we use the environment whenever we need it in the function body, and all functions that we call with
- * `chain` also have access to the environment.
- *
  * The `Reader` allows us to run our function against the data that we defined earlier or any other.
  */
 
@@ -93,6 +91,10 @@ exports.test.mGetResource = (test) => {
   }
 
 /*
+ * So that is the formula for using the `Reader`: we define the environment in the `run` method, 
+ * we use the environment whenever we need it in the function body, and all functions that we call with
+ * `chain` also have access to the environment.
+ *
  * ### Interlude: Monad transformers and the transformer stack
  *
  * That is all good, you might say, but why did we have to take a step back in order to use it? Why can't we still use the
@@ -107,7 +109,7 @@ const m = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.read
 
 /*
  * We include just the monads we need and we can customize the stack however we like.
- * If you really want to use a given helper it is not hard to define it in terms of the other helpers.
+ * If you really want to use a given helper you have to define it in terms of the other helpers.
  * Here is, for example, a function for chaining computations that use the environment (remember: `chain` 
  * and `of` are key, everything else can be defined in terms of them).
  */
@@ -118,8 +120,7 @@ m.prototype.readerCont = function (f) {
 }
 
 /*
- * Easy right? Well that is the point of the wrapper object - to serve as a container for all kinds of 
- * monad transformer functions. And once we have this one we can totally abstract away our environment in the 
+ * Once we have this we can totally abstract away our environment in the 
  * `getResourceFrom` function:
  */
 
@@ -155,15 +156,16 @@ const postResourceTo = (type, id) => (resource) => m.loadEnvironment().chain((da
  * ### Interlude: Currying
  *
  * Wait a sec. Do we need a function that receives a resource type and an id, and returns a resource modifier?
- * Or do we actually want one that receives just the type and returns a function that accepts both an ID and a new version of a
+ * Or do we actually want one that receives just the type and returns a function that accepts both an id and a new version of a
  * resource? If you find yourself asking these questions, the answer is just to wrap the function in the `curry` constructor
  * and make it work both ways.
  *
  * Just remember to order your arguments from the one you know a lot about to the one that you don't know:
  */
 
-const mPostResourceTo = mtl.curry((type, id, resource) => m.loadEnvironment().chain((data) =>
-  m.fromContinuation(data.postResource.bind(null, suffix(type, id), resource))))
+const mPostResourceTo = mtl.curry((type, id, resource) => 
+  m.loadEnvironment().chain((data) =>
+    m.fromContinuation(data.postResource.bind(null, suffix(type, id), resource))))
 
 /*
  * After we have a functions for retrieving and posting a resource, we might combine them in many ways.
@@ -221,8 +223,8 @@ exports.test.modifyAndGet  = (test) => {
  *
  * Now we can use our functions with any datasource that supports the same API, however we still
  * are bound to the implementation of the monad stack. That is, we will have to refactor them 
- * every time we want to use them with a different stack. To fix this, we have to parametrize
- * them further - add the `m` value as an argument. With this we are done and we can export them
+ * every time we want to use them with a different stack. We can fix this by parameterizing
+ * them further and add the stack constructor value as an argument. With this we are done and we can export them
  * for the next part of the tutorial:
  */
 exports.initData = initData
@@ -235,5 +237,5 @@ exports.mPostResourceTo = mtl.curry((type, id, resource, m) => m.loadEnvironment
   m.fromContinuation(data.postResource.bind(null, suffix(type, id), resource))))
 
 /*
- * Go to [Part 3](p3.md)
+ * Go to [Part 3](p3.md).
  */
