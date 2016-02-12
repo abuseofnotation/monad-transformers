@@ -1,5 +1,8 @@
-[![Build Status](https://travis-ci.org/boris-marinov/monad-transformers.svg?branch=master)](https://travis-ci.org/boris-marinov/monad-transformers)
 
+
+[ ![npm](https://nodei.co/npm/monad-transformers.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/monad-transformers)
+
+[![Build Status](https://travis-ci.org/boris-marinov/monad-transformers.svg?branch=master)](https://travis-ci.org/boris-marinov/monad-transformers)
 # About this library
 
 It is inspired by the [mtl](https://hackage.haskell.org/package/mtl) library in Haskell, but contains some JS-specific goodies.
