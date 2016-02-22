@@ -2,16 +2,13 @@ if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
 const mtl = require('../lib/main')
-
 const eventualIncrement = (val) => 
   (reject, resolve) => {
     setTimeout(() => resolve(val+1), 10)
   }
 
-//const writeState = (m) => m.statefulChain((val, state) => )
-
+//mtl.advanced = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.state)
 exports.advanced = {
-
   of (test) {
     mtl.advanced.of(3)
       .map((val) => val + 1)
@@ -20,8 +17,8 @@ exports.advanced = {
         test.done()
       })
   },
-  fromTask (test) {
-    mtl.advanced.fromTask((reject, resolve) => {
+  fromContinuation (test) {
+    mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(() => resolve(3), 10)
     })
       .map((val) => val + 1)
@@ -31,26 +28,21 @@ exports.advanced = {
       })
   },
   error (test) {
-    mtl.advanced.fromTask((reject, resolve) => {
+    mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(()=>reject(3), 10)
     })
       .map((val) => val + 1)
-      .rejectedMap((a) => {
+      .value({onTaskError:(a) => {
         test.equal(a, 3)
-        test.done()
+        test.done()}
       })
-      .value()
 
   },
   stateIntegration (test) {
-    mtl.advanced.fromTask((reject, resolve) => {
+    mtl.advanced.fromContinuation((reject, resolve) => {
       setTimeout(()=>resolve(3), 10)
     })
-    .save()
-    .rejectedMap(a => {
-      test.ok(false)
-      return a
-    })
+    .saveState()
     .cont((val) => eventualIncrement(val))
     .statefulMap((val, state) => {
       test.equal(state, 3)
@@ -60,12 +52,10 @@ exports.advanced = {
     .chain((val) => {
       return mtl.advanced.rejected()
     })
-    .rejectedMap(a => {
-      test.done()
+    .value({onTaskError:a => {test.done()}
     })
-    .value()
-    debugger
   }
-  
 }
+
+
 

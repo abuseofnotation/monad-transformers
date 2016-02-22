@@ -1,79 +1,82 @@
-# Types API
+# Types API 
 
-Here is a list of all monad transformers and the methods that they add to the wrapper object.
+Here is a list of all monad transformers and the methods that they add to the wrapper object. 
 
-## `data.maybe`
+## `data.maybe` 
 
-The `maybe` monad transformer automatically checks if your value is undefined andstops the computation if it is.
+The `maybe` monad transformer automatically checks if your value is undefined and stops the computation if it is. 
 
-### `value.get(key)`
+### `value.maybeGet(key)` 
 
-A helper to safely retrieve a possibly undefined property of your value.The value has to be a JS object.
+A helper to safely retrieve a possibly undefined property of your wrapped value. 
 
-### `value.maybeMap(f)`
+### `value.maybeMap(f)` 
 
-Chains a function that returns a `maybe` value in the computation
+Chains a function that returns a `maybe` value in the computation 
 
-### Definition
+### Definition 
 
-![Maybe](img/maybe.png)
+![Maybe](img/maybe.png) 
 
-### Source
+### Source 
 
     
-    //TODO use this
-    const nothing = {maybeVal:undefined}
+    const idFunc = a => a
     exports.maybe = {
+      // Standard functions
       name: 'Maybe',
-      // (val) => M({maybeVal:val})
-      of (val) { return this.outer.of({maybeVal: val }) },
-      // (val => M({maybeVal:val}) , M({maybeVal:val})) => M({maybeVal:val})
+      // (val) => M({value:val})
+      of (val) { return this.outer.of({value: val, something:true }) },
+      // (val => M({value:val}) , M({value:val})) => M({value:val})
       chain (funk, mMaybeVal) {
-        return this.outer.chain((maybeVal) => {
-          return maybeVal.maybeVal === undefined ? maybeVal : funk(maybeVal.maybeVal)
+        return this.outer.chain((value) => {
+          return value.something ? funk(value.value) : this.outer.of(value) 
         }, mMaybeVal)
       },
-      // (M(val)) => M({maybeVal:val})
+      // (M(val)) => M({value:val})
       lift (mVal) {
-        return this.outer.chain((val) => this.outer.of({maybeVal: val}), mVal)
+        return this.outer.chain((val) => this.outer.of({value: val, something: true}), mVal)
       },
-      // ((val) => otherVal, M({maybeVal:val})) => otherVal
-      value (funk, mMaybeVal) {
-        return this.outer.value((maybeVal) => {
-          return maybeVal.maybeVal === undefined ? maybeVal : funk(maybeVal.maybeVal)
-        }, mMaybeVal)
+      fold (value, maybe) {
+          return maybe.something ? value(maybe.value) : (this.onNothing || idFunc )() 
       },
-      get (key, val) {
-        return this.of(val[key])
+      // Custom functions
+      maybeGet (key, val) {
+        return val[key] !== undefined ? this.of(val[key]) : this.outer.of({something: false})
+      },
+      nothing () {
+        return this.outer.of({something: false})
       },
       maybeMap (funk, val) {
-        return this.of(funk(val))
+        const value = funk(val)
+        return value !== undefined ? this.of(value) : this.outer.of({something: false})
       }
     }
 
 
-[_View in GitHub_](../lib/data.js)
+[_View in GitHub_](../lib/data.js) 
 
     
-## `data.list`
+## `data.list` 
 
-The `list` monad transformer allows you to operate on a list of values.instead of on a single value.
+The `list` monad transformer allows you to operate on a list of values. instead of on a single value. 
 
-### `List.fromArray(val)`
+### `List.fromArray(val)` 
 
-Wraps an array in a list monad transformer instance.
+Wraps an array in a list monad transformer instance. 
 
-### `values.filter(fn)`
+### `values.filter(fn)` 
 
-Filters out the values that don't match the predicate. Same as `Array.prototype.filter`.
+Filters out the values that don't match the predicate. Same as `Array.prototype.filter`. 
 
-_The behaviour of `Array.prototype.map` is covered by the monad transformer `map` method._
+_The behaviour of `Array.prototype.map` is covered by the monad transformer `map` method._ 
 
-### Source
+### Source 
 
     
     exports.list = {
       name: 'List',
+      // Standard functions
       // (val) => M([val])
       of (val) {
         return this.outer.of([val])
@@ -101,6 +104,10 @@ _The behaviour of `Array.prototype.map` is covered by the monad transformer `map
           return list.map(funk)
         }, val)
       },
+      fold (value, list) {
+        return list.map(value)
+      },
+      // Custom functions
       filter (funk, val) {
         if (funk(val)) {
           return this.of(val)
@@ -118,31 +125,31 @@ _The behaviour of `Array.prototype.map` is covered by the monad transformer `map
     }
 
 
-[_View in GitHub_](../lib/data.js)
+[_View in GitHub_](../lib/data.js) 
 
     
-## `data.writer`
+## `data.writer` 
 
-The writer monad transformer augments the wrapped value with one additional valuewhich may be used for storing some additional information about the computation.
+The writer monad transformer augments the wrapped value with one additional value which may be used for storing some additional information about the computation. 
 
-The additional value must have a `concat` method, as `String` or `Array`.
+The additional value must be an object that has a `concat` method (as String or Array). 
 
-### `value.tell(val)`
+### `value.tell(val)` 
 
-Concats `val` to the additional value.
+Concats `val` to the current log value. 
 
-### `value.listen(f)`
+### `value.tellMap(f)` 
 
-Calls `f` with the additional value as an argument. 
+Calls `f` with the current value as an argument and then concats the result to the current log value. 
 
-### Definition
+### Definition 
 
-![Writer](img/writer.png)
+![Writer](img/writer.png) 
 
-###Source
+###Source 
 
     
-    const computeLog = (log, newLog) => {
+    const concatLog = (log, newLog) => {
       if(log === undefined) {
         return newLog
       } else {
@@ -156,104 +163,162 @@ Calls `f` with the additional value as an argument.
     
     exports.writer = {
       name: 'Writer',
-    
+      // Standard functions
       // (val) => M([val, log])
       of (val) {
-        return this.outer.of([val, undefined])
+        return this.outer.of({value: val, writer: undefined})
       },
     
       // (val => M([val, log]), M([val, log])) => M([val, log])
       chain (funk, mWriterVal) {
         return this.outer.chain((writerVal) => {
-          const val = writerVal[0]
-          const log = writerVal[1] 
+          const val = writerVal.value, log = writerVal.writer
           const newMWriterVal = funk(val)
           return this.outer.chain((newWriterVal) => {
-            const newVal = newWriterVal[0]
-            const newLog = typeof newWriterVal[1] === 'function' ? newWriterVal[1](log) : newWriterVal[1]
-            return this.outer.of([newVal, computeLog(log, newLog)])
+            const newVal = newWriterVal.value, newLog = newWriterVal.writer
+            return this.outer.of({value: newVal, writer: concatLog(log, newLog)})
           }, newMWriterVal)
         }, mWriterVal)
     
       },
-    
       // (M(val) => M([val, log])
       lift (mVal) {
-        return this.outer.chain((val) => this.outer.of([val, undefined]), mVal)
+        return this.outer.chain((val) => this.outer.of({value: val, writer: undefined}), mVal)
       },
-    
       // ((val) => b, M([val, log])) => b
-      value (funk, mWriterVal) {
-        return this.outer.value((writerVal) => {
-          return funk(writerVal[0])
-        }, mWriterVal)
+      fold (value, writerVal) {
+        (this.onWriterLog || idFunc)(writerVal.writer)
+        return value(writerVal.value)
       },
-    
+      // Custom functions
       tell (message, val) {
-        return this.outer.of([val, message])
+        return this.outer.of({value: val, writer:message})
       },
-      listen (funk, val){
-        return this.outer.of([val, funk])
+      tellMap (fn, val) {
+        return this.outer.of({value: val, writer: fn(val)})
       }
     }
 
 
-[_View in GitHub_](../lib/data.js)
+[_View in GitHub_](../lib/data.js) 
 
     
 
-## `comp.state`
+## `comp.state` 
 
-The `state` monad transformer allows you to keep one additional state valuewith your computation.
+The `state` monad transformer allows you to keep one additional mutable state value with your computation. 
 
-### Definition
+### `value.save()` 
 
-![State](img/state.png)
+Saves the return value of the function in the state, overwriting the previous one. 
 
-###Source
+### `value.load()` 
 
+Returns the current state. 
+
+### `value.statefulMap(f)` 
+
+Maps over the current value and state with `f`. The function should return an array containing two elements - the new value and the new state. 
+
+### Definition 
+
+![State](img/state.png) 
+
+###Source 
+
+    const idFunc = a=>a
+    
     exports.state = {
       name: 'State',
+      //Standard functions:
       of (val) {
-        return (prevState) => this.outer.of([val, prevState])
+        return (prevState) => this.outer.of({value: val, state: prevState})
       },
       chain (funk, state) {
         return (prevState) =>
           this.outer.chain((params) => {
-            const newVal = params[0], newState = params[1]
+            const newVal = params.value, newState = params.state
             return funk(newVal)(newState)
           }, state(prevState))
       },
       lift (val) {
         return (prevState) =>
-          this.outer.chain((innerValue) => this.outer.of([innerValue, prevState]), val)
+          this.outer.chain((innerValue) => this.outer.of({value: innerValue, state: prevState}), val)
       },
-      load (val) {
-        return (prevState) => this.outer.of([prevState, prevState])
+      run (f, state) {
+        return f(state())
       },
-      save (val) {
-        return (prevState) => this.outer.of([val, val])
+      fold (value, params) {
+        (this.onState || idFunc)(params.state)
+        return value(params.value)
+      },
+      //Custom functions:
+      loadState (val) {
+        return (prevState) => this.outer.of({value: prevState, state: prevState})
+      },
+      saveState (val) {
+        return (prevState) => this.outer.of({value:val, state: val})
       },
       statefulMap (funk, val) {
-        return (prevState) => this.outer.of(funk(val, prevState))
+        return (prevState) => {
+          const stateTuple = funk(val, prevState)
+          return this.outer.of({value: stateTuple[0], state: stateTuple[1]})
+        }
       },
-      statefulChain(funk, val) {
-        return (prevState) => funk(val, prevState)
+      setState (newState, val) {
+        return (prevState) => this.outer.of({value:val, state: newState})
       },
-      value (funk, state) {
-        return this.outer.value((params) => {
-          return funk(params[0])
-        }, state())
+      mapState (funk, val) {
+        return (prevState) => this.outer.of({value:val, state: funk(prevState, val)})
       }
     }
     
+## `comp.reader` 
+
+The `reader` monad transformer allows you to specify an immutable configuration for your function which you can use to tweek the way it behaves. 
+
+### Definition 
+
+![State](img/writer.png) 
+
+###Source 
+
+    exports.reader = {
+      name: 'Reader',
+      //Standard functions:
+      of (val) {
+        return (env) => this.outer.of(val)
+      },
+      chain (funk, reader) {
+        return (env) =>
+          this.outer.chain((val) => {
+            return funk(val)(env)
+          }, reader(env))
+      },
+      lift (val) {
+        return (env) => val
+      },
+      run (f, reader) {
+        return f(reader(this.environment))
+      },
+      fold (value, val) {
+        return value(val)
+      },
+      //Custom functions:
+      readerMap (f, val) {
+        return (environment) => this.outer.of(f(val, environment))
+      },
+      loadEnvironment(val) {
+        return (environment) => this.outer.of(environment)
+      }
+    }
 
 
-[_View in GitHub_](../lib/comp.js)
+[_View in GitHub_](../lib/comp.js) 
 
     
-## References
+## References 
 
-All images, taken from [the Wikipedia article on monad transformers](https://en.wikipedia.org/wiki/Monad_transformer).
+All images, taken from [the Wikipedia article on monad transformers](https://en.wikipedia.org/wiki/Monad_transformer). 
 
     

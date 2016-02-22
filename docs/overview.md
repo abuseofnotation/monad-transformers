@@ -1,17 +1,20 @@
-#Overview
+#Overview 
 
-The package consists of the following components:
+The package consists of the following components: 
 
-## Object wrapper
+## Object wrapper 
 
-The [object wrapper](wrapper.md), exposed via the `mtl.make` function, combines one or several monad transformer definitions and mixes them into one [Fantasy Land compliant](https://github.com/fantasyland/fantasy-land) monad.
+The [object wrapper](wrapper.md), exposed via the `mtl.make` function, combines one or several monad  transformer definitions and mixes them into one  [Fantasy Land compliant](https://github.com/fantasyland/fantasy-land) monad. 
 
     const mtl = {}
-    mtl.make = require('./wrapper')
+    const createStack = require('./stack')
+    mtl.make = function () {
+      return createStack(Array.prototype.slice.call(arguments)).constructor
+    }
     
-## Monad transformer definitions
+## Monad transformer definitions 
 
-The library contains four [monad transformer definitions](api.md), distributed in two packages:`data` and `comp`. It also contains three versions of the identity monad transformer, usefulas a reference when implementing (custom monad transformers)[implementing-transformer.md].
+The library contains four [monad transformer definitions](api.md), distributed in two packages: `data` and `comp`. It also contains three versions of the identity monad transformer, useful as a reference when implementing [custom monad transformers](implementing-transformer.md). 
 
 
 
@@ -20,18 +23,18 @@ The library contains four [monad transformer definitions](api.md), distributed i
     mtl.id = require('./id')
     
     
-## Base monads
+## Base monads 
 
-When stacking monad transformers, a you must place one plain monad at the bottom of the stack.This monad serves as the stack's base. 
+When stacking monad transformers, a you must place one plain monad at the bottom of the stack. This monad serves as the stack's base.  
 
-By default, the package uses the identity monad as a base but it also defines a wrapper whichallow you to use the [Task monad](https://github.com/folktale/data.task) from Folktale as a base.
+By default, the package uses the identity monad as a base but it also defines a wrapper which allow you to use the [Task monad from Folktale](https://github.com/folktale/data.task) as a base. 
 
     
     mtl.base = require('./base')
     
-## Predefined stacks
+## Predefined stacks 
 
-The library features five predefined monad stacks which serve the most common use cases.
+The library features five predefined monad stacks. 
 
 
 
@@ -41,12 +44,20 @@ The library features five predefined monad stacks which serve the most common us
     mtl.statelist = mtl.make(mtl.data.list, mtl.data.maybe, mtl.data.writer, mtl.comp.state)
     
     mtl.advanced = mtl.make(mtl.base.task, mtl.data.maybe, mtl.data.writer, mtl.comp.state)
-    mtl.advanced.prototype.rejectedMap = function(fn) {
-      return mtl.advanced(() => this._value().rejectedMap(fn))
-    }
+    
+
+
+## Helpers 
+
+Some helper functions that we want to keep handy: 
+
+    const helpers = require('./helpers')
+    mtl.curry = helpers.curry
+    mtl.compose = helpers.compose
+    
     module.exports = mtl
 
 
-[_View in GitHub_](../lib/main.js)
+[_View in GitHub_](../lib/main.js) 
 
     

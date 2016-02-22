@@ -2,7 +2,6 @@ if ( global.v8debug ) {
 	global.v8debug.Debug.setBreakOnException()
 }
 var mtl = require('../lib/main')
-var sinon = require('sinon')
 var permutations = require('./permutations')
 
 const oneList = [1]
@@ -30,24 +29,3 @@ exports.list = permutations(a => (a.indexOf(mtl.data.list) !== -1 ), (one, two, 
   }
 })
 
-exports.listMaybeGet = (test) => {
-  var listMaybe = mtl.make(mtl.data.list, mtl.data.maybe)
-  var spy = sinon.spy((a) => a)
-  listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
-    .get('name')
-    .map(spy)
-
-  test.deepEqual(spy.returnValues, ['foo', 'bar', 'baz'])
-  test.done()
-}
-exports.listMaybeFilter = (test) => {
-  var listMaybe = mtl.make(mtl.data.list, mtl.data.maybe)
-  var spy = sinon.spy((a) => a)
-  listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}])
-    .filter(a => a.name === 'foo')
-    .map(spy)
-
-  test.deepEqual(spy.returnValues, [{name:'foo'}])
-  test.done()
-}
-global.list = module.exports

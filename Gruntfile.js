@@ -13,7 +13,7 @@ module.exports = function (grunt) {
               .map((row) => {
                 var twoL = row.slice(0,2)
                 if(twoL === '/*' || twoL === ' *' || twoL === '*/') {
-                  return row.length > 3 ? row.slice(3) : '\n\n'
+                  return row.length > 3 ? row.slice(3) + ' ' : '\n\n'
                 } else {
                   return '    ' + row + '\n'
                 }
@@ -26,7 +26,11 @@ module.exports = function (grunt) {
             'docs/overview.md': ['lib/main.js'],
             'docs/wrapper.md': ['lib/wrapper.js'],
             'docs/implementing-transformer.md': ['lib/id.js'],
-            'docs/api.md': ['lib/data.js', 'lib/comp.js']
+            'docs/api.md': ['lib/data.js', 'lib/comp.js'],
+            'docs/example.md': ['test/db_example.js'],
+            'docs/tutorial/p1.md': ['tutorial/p1.js'],
+            'docs/tutorial/p2.md': ['tutorial/p2.js'],
+            'docs/tutorial/p3.md': ['tutorial/p3.js'],
           },
        }
     },

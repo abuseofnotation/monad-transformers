@@ -11,15 +11,16 @@ exports.writer = permutations(a => (a.indexOf(mtl.data.writer) !== -1), (one, tw
     tellListen: (test) => {
       
       const writer = mtl.make(one, two, three)
-      debugger
       writer.of(5)
         .tell('foo')
         .tell('bar')
-        .listen((val) =>{test.equal(val, 'foobar')})
-        .value()
+        .value({ 
+          onWriterLog: (val) =>{
+            test.equal(val, 'foobar')
+            test.done()
+          }
+        })
 
-      test.done()
     }
   }
 })
-global.writer = module.exports
