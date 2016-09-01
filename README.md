@@ -9,8 +9,9 @@ It is inspired by the [mtl](https://hackage.haskell.org/package/mtl) library in 
 
 # About monad transformers
 
-Monad transformers are composable monads. They are cool. See 
-[this article](http://book.realworldhaskell.org/read/monad-transformers.html).
+If you don't know what a monad transformer is, relax: it is just a functor between two kleisi categories!
+
+Joking. See [this article](http://book.realworldhaskell.org/read/monad-transformers.html).
 
 Maybe you need to understand monads first, before you start with transformers. 
 Read [this book](https://github.com/MostlyAdequate/mostly-adequate-guide) and/or
