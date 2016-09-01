@@ -9,7 +9,9 @@ It is inspired by the [mtl](https://hackage.haskell.org/package/mtl) library in 
 
 # About monad transformers
 
-If you don't know what a monad transformer is, relax: it is just a functor between two kleisi categories!
+If you don't know what a monad transformer is, relax:
+
+It is just a functor between two kleisi categories.
 
 Joking. See [this article](http://book.realworldhaskell.org/read/monad-transformers.html).
 
