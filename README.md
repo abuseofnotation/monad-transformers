@@ -32,15 +32,20 @@ see [my other library](http://boris-marinov.github.io/funktion/).
 
 Call `mtl.make` to compose two or several types in a new type:
 
+```js
      var mtl = require('monad-transformers')
      var listMaybe = mtl.make(mtl.data.list, mtl.data.maybe)
+```
 
 Create an instance of the new type and use it.
   
+```js
       listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {noname: 'baz'}])
+```
 
 Use the methods coming from the types that you composed:
 
+```js
       listMaybe.fromArray([{name: 'foo'}, {name: 'bar'}, {noname: 'baz'}])
 
         //Calling a 'maybe' method
@@ -51,6 +56,7 @@ Use the methods coming from the types that you composed:
         
         //Calling a generic monad method
         .map((val)=>console.log(val)) //prints 'foo'
+```
 
 # Slow tutorial
   1. [Using the monad stack. Using the Task monad, the Maybe monad and the Writer monad.](docs/tutorial/p1.md)
